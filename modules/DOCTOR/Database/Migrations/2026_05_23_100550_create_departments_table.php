@@ -15,8 +15,8 @@ return new class extends Migration
             $table->text('shortDesc')->nullable();
             $table->longText('descriptions')->nullable();
 
-            $table->string('icon')->nullable();
-          
+            $table->string('text_icon')->nullable();
+                    
             
             $table->foreignId('parent_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->foreignId('created_by')->constrained('users');

@@ -3,12 +3,14 @@
 namespace Modules\DOCTOR\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\DOCTOR\Interfaces\DepartmentRepositoryInterface;
+use Modules\DOCTOR\Repositories\DepartmentRepository;
 
 class DOCTORServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(DepartmentRepositoryInterface::class, DepartmentRepository::class);
     }
 
     public function boot(): void
@@ -21,5 +23,6 @@ class DOCTORServiceProvider extends ServiceProvider
         }
 
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
+        
     }
 }
