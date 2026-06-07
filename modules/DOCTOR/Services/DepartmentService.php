@@ -63,16 +63,13 @@ class DepartmentService
     public function update(int $id, array $data): Department
     {
         $department = $this->departmentRepository->findById($id);
-
         $department = $this->departmentRepository->update($department, Arr::except($data, array_keys(self::MediaCollections)));
-
         return $this->syncMedia($department, $data);
     }
 
     public function destroy(int $id): bool
     {
         $department = $this->departmentRepository->findById($id);
-
         return $this->departmentRepository->delete($department);
     }
 
