@@ -17,6 +17,8 @@ class DoctorTimetable extends Model
         'location',
         'is_active',
         'max_patient',
+        'created_by',
+        'updated_by',
     ];
 
     public function doctor()

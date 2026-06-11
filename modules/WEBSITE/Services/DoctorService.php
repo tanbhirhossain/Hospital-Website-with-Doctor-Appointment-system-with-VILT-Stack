@@ -107,19 +107,16 @@ class DoctorService
 
     private function syncMedia(Doctor $doctor, array $data): Doctor
     {
-        // Profile Image - single file
         if (($data['profile_image'] ?? null) instanceof UploadedFile) {
             $doctor->addMedia($data['profile_image'])->toMediaCollection('profile_image');
         }
 
-        // Gallery - multiple files
         foreach ($data['gallery'] ?? [] as $galleryItem) {
             if ($galleryItem instanceof UploadedFile) {
                 $doctor->addMedia($galleryItem)->toMediaCollection('gallery');
             }
         }
 
-        // Certificates - multiple files
         foreach ($data['certificates'] ?? [] as $certificateItem) {
             if ($certificateItem instanceof UploadedFile) {
                 $doctor->addMedia($certificateItem)->toMediaCollection('certificates');

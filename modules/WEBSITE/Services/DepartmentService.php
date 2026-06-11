@@ -11,9 +11,7 @@ use Modules\WEBSITE\Models\Department;
 
 class DepartmentService
 {
-    /**
-     * @var array<string, string>
-     */
+
     private const MediaCollections = [
         'banner_image' => 'banner_image',
         'image' => 'image',
@@ -24,17 +22,13 @@ class DepartmentService
         protected DepartmentRepositoryInterface $departmentRepository
     ) {}
 
-    /**
-     * @param  array{search?: string|null, parent_id?: int|string|null, media?: string|null}  $filters
-     */
+
     public function getAllDepartments(array $filters = []): LengthAwarePaginator
     {
         return $this->departmentRepository->all($filters);
     }
 
-    /**
-     * @return Collection<int, Department>
-     */
+
     public function getParentOptions(?int $excludeDepartmentId = null): Collection
     {
         return Department::query()
@@ -44,9 +38,7 @@ class DepartmentService
             ->get();
     }
 
-    /**
-     * @param  array{name: string, slug: string, shortDesc?: string|null, descriptions?: string|null, text_icon?: string|null, parent_id?: int|null, banner_image?: UploadedFile|null, image?: UploadedFile|null, icon_image?: UploadedFile|null}  $data
-     */
+
     public function store(array $data, int $userId): Department
     {
         $department = $this->departmentRepository->create([
@@ -57,9 +49,7 @@ class DepartmentService
         return $this->syncMedia($department, $data);
     }
 
-    /**
-     * @param  array{name: string, slug: string, shortDesc?: string|null, descriptions?: string|null, text_icon?: string|null, parent_id?: int|null, banner_image?: UploadedFile|null, image?: UploadedFile|null, icon_image?: UploadedFile|null}  $data
-     */
+
     public function update(int $id, array $data): Department
     {
         $department = $this->departmentRepository->findById($id);
@@ -73,9 +63,7 @@ class DepartmentService
         return $this->departmentRepository->delete($department);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
+
     private function syncMedia(Department $department, array $data): Department
     {
         foreach (self::MediaCollections as $field => $collection) {

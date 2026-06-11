@@ -102,53 +102,53 @@ class AiAgentController extends Controller
     protected function generateFinalReply($userMessage, $contextData)
     {
         // 💡 ফিক্স ২ ও ৩: পারসোনা কনসিস্টেন্সি এবং স্বাগতম লুপ বন্ধ করার প্রম্পট গাইডলাইন
-$finalPrompt = "
-    You are the professional, polite, and neutral AI Assistant of AMZ Hospital. 
-    User Query: '{$userMessage}'
-    System Data: " . json_encode($contextData) . "
+    $finalPrompt = "
+        You are the professional, polite, and neutral AI Assistant of AMZ Hospital. 
+        User Query: '{$userMessage}'
+        System Data: " . json_encode($contextData) . "
 
-    STRICT RULES FOR RESPONSE GENERATION & FORMATTING:
-    1. DO NOT say 'Welcome to AMZ Hospital' or 'নমস্কার' or 'আসসালামু আলাইকুম' in every reply.
-    2. Keep a warm, polite, professional, and religiously NEUTRAL tone in Bangla.
-    3. If multiple tests or data are found in System Data, you MUST format them using clear Markdown Bullet Points or Markdown Tables with proper bolding. Do not write everything in a single dense paragraph.
-    
-    Example Layout for Multiple Tests:
-    আপনার অনুসন্ধান অনুযায়ী আমাদের এখানে **[키워ড]** সম্পর্কিত নিম্নলিখিত টেস্টগুলো উপলব্ধ আছে:
+        STRICT RULES FOR RESPONSE GENERATION & FORMATTING:
+        1. DO NOT say 'Welcome to AMZ Hospital' or 'নমস্কার' or 'আসসালামু আলাইকুম' in every reply.
+        2. Keep a warm, polite, professional, and religiously NEUTRAL tone in Bangla.
+        3. If multiple tests or data are found in System Data, you MUST format them using clear Markdown Bullet Points or Markdown Tables with proper bolding. Do not write everything in a single dense paragraph.
+        
+        Example Layout for Multiple Tests:
+        আপনার অনুসন্ধান অনুযায়ী আমাদের এখানে **[키워ড]** সম্পর্কিত নিম্নলিখিত টেস্টগুলো উপলব্ধ আছে:
 
-    * 📝 **Test Name 1:** ৳১,০০০
-    * 📝 **Test Name 2:** ৳৮০০
-    
-    আপনার যদি আরও তথ্যের প্রয়োজন হয় বা অ্যাপয়েন্টমেন্ট বুক করতে চান, তবে আমাদের জানাতে পারেন। সুস্থ থাকুন।
+        * 📝 **Test Name 1:** ৳১,০০০
+        * 📝 **Test Name 2:** ৳৮০০
+        
+        আপনার যদি আরও তথ্যের প্রয়োজন হয় বা অ্যাপয়েন্টমেন্ট বুক করতে চান, তবে আমাদের জানাতে পারেন। সুস্থ থাকুন।
 
-    4. Use the Currency Symbol '৳' or 'টাকা' cleanly.
-    5. If System Data is empty, politely state that this specific test info is not in the system.
-    ";
-        $ollamaEndpoint = rtrim($this->ollamaUrl, '/') . '/api/chat';
+        4. Use the Currency Symbol '৳' or 'টাকা' cleanly.
+        5. If System Data is empty, politely state that this specific test info is not in the system.
+        ";
+            $ollamaEndpoint = rtrim($this->ollamaUrl, '/') . '/api/chat';
 
-        try {
-            $response = Http::timeout(60)->post($ollamaEndpoint, [
-                'model' => $this->model,
-                'messages' => [
-                    ['role' => 'user', 'content' => $finalPrompt]
-                ],
-                'stream' => false
-            ]);
+            try {
+                $response = Http::timeout(60)->post($ollamaEndpoint, [
+                    'model' => $this->model,
+                    'messages' => [
+                        ['role' => 'user', 'content' => $finalPrompt]
+                    ],
+                    'stream' => false
+                ]);
 
-            if ($response->failed()) {
-                return response()->json(['reply' => 'দুঃখিত, ফাইনাল রেসপন্স জেনারেট করার সময় ক্লাউড সার্ভারে সমস্যা হয়েছে।']);
+                if ($response->failed()) {
+                    return response()->json(['reply' => 'দুঃখিত, ফাইনাল রেসপন্স জেনারেট করার সময় ক্লাউড সার্ভারে সমস্যা হয়েছে।']);
+                }
+
+                $resData = $response->json();
+                $replyText = $resData['message']['content'] ?? 'দুঃখিত, কোনো উত্তর তৈরি করা যায়নি।';
+
+                return response()->json(['reply' => $replyText]);
+
+            } catch (\Exception $e) {
+                Log::error('Final Reply Exception: ' . $e->getMessage());
+                return response()->json(['reply' => 'উত্তর তৈরি করার সময় একটি সমস্যা হয়েছে।']);
             }
-
-            $resData = $response->json();
-            $replyText = $resData['message']['content'] ?? 'দুঃখিত, কোনো উত্তর তৈরি করা যায়নি।';
-
-            return response()->json(['reply' => $replyText]);
-
-        } catch (\Exception $e) {
-            Log::error('Final Reply Exception: ' . $e->getMessage());
-            return response()->json(['reply' => 'উত্তর তৈরি করার সময় একটি সমস্যা হয়েছে।']);
+        }
+        public function index(){
+            return Inertia::render('HEALTHAI::ChatAgent');
         }
     }
-    public function index(){
-        return Inertia::render('HEALTHAI::ChatAgent');
-    }
-}

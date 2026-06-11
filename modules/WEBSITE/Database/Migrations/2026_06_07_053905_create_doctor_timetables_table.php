@@ -17,6 +17,7 @@ return new class extends Migration
                 $table->tinyInteger('day_of_week');
                 $table->time('start_time');
                 $table->time('end_time');
+                $table->integer('slot_duration')->default(30); // Slot duration in minutes
                 $table->string('location')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->integer('max_patient')->nullable();

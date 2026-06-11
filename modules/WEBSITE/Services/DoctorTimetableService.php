@@ -1,10 +1,10 @@
 <?php 
 
-namespace Modules\DOCTOR\Services;
+namespace Modules\WEBSITE\Services;
 
 use Illuminate\Support\Facades\Auth;
-use Modules\DOCTOR\Interfaces\DoctorTimetableRepositoryInterface;
-use Modules\DOCTOR\Models\DoctorTimetable;
+use Modules\WEBSITE\Interfaces\DoctorTimetableRepositoryInterface;
+use Modules\WEBSITE\Models\DoctorTimetable;
 
 class DoctorTimetableService{
 

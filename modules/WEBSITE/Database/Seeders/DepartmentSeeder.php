@@ -11,7 +11,9 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
-        $filePath = __DIR__ . '/departments.csv';
+
+    $filePath = __DIR__ . '/data/departments.csv';
+
         if (!file_exists($filePath)) {
             $this->command->error("CSV file not found at: {$filePath}");
             return;
