@@ -28,6 +28,11 @@ class DepartmentService
         return $this->departmentRepository->all($filters);
     }
 
+    public function getAllDepartmentsForAI(array $filters = []): Collection
+    {
+        // 👈 এটি সরাসরি সব ডেটা Collection আকারে রিটার্ন করবে
+        return $this->departmentRepository->allUnpaginated($filters); 
+    }
 
     public function getParentOptions(?int $excludeDepartmentId = null): Collection
     {

@@ -31,6 +31,21 @@ class DepartmentRepository implements DepartmentRepositoryInterface
     }
 
     #[Override]
+    public function allUnpaginated(array $filters = []): \Illuminate\Database\Eloquent\Collection
+    {
+        return Department::query()
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('name', 'like', "%{$search}%")
+                          ->orWhere('slug', 'like', "%{$search}%")
+                          ->orWhere('shortDesc', 'like', "%{$search}%");
+                });
+            })
+            ->latest('id')
+            ->get(); // ?? ????? paginate ?? ???? get() ??????? ??? ???
+    }
+
+    #[Override]
     public function findById(int $id): Department
     {
         return Department::query()->findOrFail($id);

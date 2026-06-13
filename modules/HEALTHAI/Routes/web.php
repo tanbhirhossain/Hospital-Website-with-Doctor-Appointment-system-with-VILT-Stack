@@ -8,3 +8,10 @@ Route::middleware(['web', 'auth'])->group(function (): void {
 });
 
 Route::get('/chat', [AiAgentController::class, 'index']);
+
+
+Route::get('/check-api', function () {
+    $medicine = new \Modules\HEALTHAI\Services\MISDataService();
+    $data = $medicine->getPharmacy(request());
+    return response()->json($data);
+});
