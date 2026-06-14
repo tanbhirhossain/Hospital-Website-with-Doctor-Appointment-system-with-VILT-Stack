@@ -1,38 +1,56 @@
-<?php 
+<?php
 
 namespace Modules\HEALTHAI\Services;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MISDataService
 {
-    public function getBeds()
+    private string $baseUrl = 'http://erp.amzhospitalbd.com/misdata/api';
+
+    private function token(): string
     {
-        $response = Http::withToken(env('HOST_API_TOKEN'))
-            ->withHeaders([
-                'Accept' => 'application/json',
-            ])
-            ->get('http://erp.amzhospitalbd.com/misdata/api/beds');
-
-        if ($response->successful()) {
-            return $response->json(); // This contains your bed data
-        }
-
-        return response()->json(['error' => 'Unauthorized or API error'], $response->status());
+        return config('healthai.mis_api_token', env('HOST_API_TOKEN', ''));
     }
 
-    public function getPharmacy(Request $request){
-        $response = Http::withToken(env('HOST_API_TOKEN'))
-            ->withHeaders([
-                'Accept' => 'application/json',
-            ])
-            ->get('http://erp.amzhospitalbd.com/misdata/api/medicines?search='.$request->query('search'));
+    private function get(string $path, array $query = []): mixed
+    {
+        try {
+            $response = Http::withToken($this->token())
+                ->withHeaders(['Accept' => 'application/json'])
+                ->get($this->baseUrl . $path, $query);
 
-        if ($response->successful()) {
-            return $response->json(); // This contains your pharmacy data
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::warning('[MISDataService] API error', [
+                'path'   => $path,
+                'status' => $response->status(),
+            ]);
+
+            return ['error' => 'API returned ' . $response->status()];
+        } catch (\Throwable $e) {
+            Log::error('[MISDataService] Request failed', ['path' => $path, 'error' => $e->getMessage()]);
+            return ['error' => $e->getMessage()];
         }
+    }
 
-        return response()->json(['error' => 'Unauthorized or API error'], $response->status());
+    /**
+     * Get live bed availability from MIS ERP.
+     */
+    public function getBeds(): mixed
+    {
+        return $this->get('/beds');
+    }
+
+    /**
+     * Search pharmacy/medicine stock by keyword.
+     * Clean, keyword-first API — no Request object needed.
+     */
+    public function searchPharmacy(string $keyword): mixed
+    {
+        return $this->get('/medicines', ['search' => trim($keyword)]);
     }
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Modules\HEALTHAI\Services;
 
@@ -7,48 +7,58 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelService
 {
-   public function searchTestPrice(string $query): array
+    private string $filePath;
+
+    public function __construct()
     {
-        $filePath = storage_path('app/shared/test_prices.xlsx');
-        
-        if (!file_exists($filePath)) {
-            \Log::error("Excel file not found at: " . $filePath);
+        $this->filePath = storage_path('app/shared/test_prices.xlsx');
+    }
+
+    /**
+     * Search test/investigation prices from the Excel price list.
+     *
+     * Normalizes both query and test names by stripping hyphens and spaces,
+     * so "x-ray", "xray", and "x ray" all match correctly.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchTestPrice(string $query): array
+    {
+        if (!file_exists($this->filePath)) {
+            Log::error('[ExcelService] Price list file not found', ['path' => $this->filePath]);
             return [];
         }
 
-        $data = Excel::toArray([], $filePath);
+        // Normalize query: remove hyphens, spaces, and quotes
+        $normalizedQuery = $this->normalize($query);
+
+        if (empty($normalizedQuery)) {
+            return [];
+        }
+
+        $data = Excel::toArray([], $this->filePath);
         $rows = $data[0] ?? [];
+        array_shift($rows); // Remove header row
 
-        array_shift($rows); // হেডার বাদ দেওয়া
-
-        // 💡 ফিক্স: ইউজার ও ওল্ল্যামা থেকে আসা কুয়েরিকে নরমাল করা (x-ray, xray, x ray সব এক হয়ে যাবে)
-        $cleanQuery = trim(str_replace(['"', "'", '-', ' '], '', $query));
-
-        if (empty($cleanQuery)) {
-            return [];
+        $results = [];
+        foreach ($rows as $row) {
+            $testName = $row[1] ?? '';
+            if (stripos($this->normalize($testName), $normalizedQuery) !== false) {
+                $results[] = [
+                    'code'              => $row[0] ?? 'N/A',
+                    'test_name'         => $testName,
+                    'charge'            => $row[2] ?? '0',
+                    'discount'          => trim(($row[4] ?? '0') . ' ' . ($row[5] ?? '')),
+                    'report_department' => $row[6] ?? 'N/A',
+                ];
+            }
         }
 
-        $filteredResults = array_filter($rows, function($row) use ($cleanQuery) {
-            $testName = $row[1] ?? ''; 
-            
-            // 💡 ফিক্স: এক্সেল ফাইলের নাম থেকেও হাইফেন ও স্পেস তুলে নিয়ে ম্যাচ করানো
-            $normalizedTestName = str_replace(['-', ' '], '', $testName);
+        return $results;
+    }
 
-            return stripos($normalizedTestName, $cleanQuery) !== false;
-        });
-
-        // ওল্ল্যামার জন্য ডেটা ফরম্যাট করা
-        $formattedData = [];
-        foreach ($filteredResults as $row) {
-            $formattedData[] = [
-                'code' => $row[0] ?? 'N/A',
-                'test_name' => $row[1] ?? 'N/A',
-                'charge' => $row[2] ?? '0',
-                'discount' => ($row[4] ?? '0') . ' ' . ($row[5] ?? ''),
-                'report_department' => $row[6] ?? 'N/A'
-            ];
-        }
-
-        return array_values($formattedData);
+    private function normalize(string $value): string
+    {
+        return str_replace(['-', ' ', '"', "'"], '', $value);
     }
 }

@@ -4,14 +4,13 @@ use Illuminate\Support\Facades\Route;
 use Modules\HEALTHAI\Http\Controllers\AiAgentController;
 
 Route::middleware(['web', 'auth'])->group(function (): void {
-    
+    Route::get('/chat', [AiAgentController::class, 'index'])->name('healthai.chat');
 });
 
-Route::get('/chat', [AiAgentController::class, 'index']);
-
-
-Route::get('/check-api', function () {
-    $medicine = new \Modules\HEALTHAI\Services\MISDataService();
-    $data = $medicine->getPharmacy(request());
-    return response()->json($data);
-});
+// Debug-only route — remove in production or guard behind a gate
+if (app()->isLocal()) {
+    Route::get('/check-api', function () {
+        $service = new \Modules\HEALTHAI\Services\MISDataService();
+        return response()->json($service->searchPharmacy(request()->query('search', '')));
+    });
+}

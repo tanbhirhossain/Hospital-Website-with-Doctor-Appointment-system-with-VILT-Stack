@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('appointment_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->unsignedInteger('slot_duration')->comment('Duration in minutes, denormalized for record');
+            $table->unsignedInteger('slot_duration')->comment('Duration in minutes, denormalized for record')->nullable();
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'])->default('pending');
             $table->text('notes')->nullable();
             $table->text('cancellation_reason')->nullable();

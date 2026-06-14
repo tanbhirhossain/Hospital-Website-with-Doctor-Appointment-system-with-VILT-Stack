@@ -1,134 +1,378 @@
 <template>
-  <div class="flex flex-col h-screen max-w-lg mx-auto bg-gray-50 border border-gray-200 shadow-lg rounded-lg overflow-hidden my-5">
-    <div class="bg-blue-600 text-white p-4 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 font-bold text-xl">
-          🏥
-        </div>
-        <div>
-          <h2 class="font-semibold text-lg">Hospital AI Assistant</h2>
-          <p class="text-xs text-blue-100 flex items-center">
-            <span class="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span> অনলাইন (Gemma 31B Cloud)
-          </p>
-        </div>
+  <div class="chat-wrapper">
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <div class="chat-header">
+      <div class="header-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
       </div>
+      <div class="header-info">
+        <h2>AMZ Health Assistant</h2>
+        <span class="status-dot"></span><span class="status-text">Online</span>
+      </div>
+      <button class="clear-btn" title="Clear chat" @click="clearChat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+      </button>
     </div>
 
-    <div ref="messageBox" class="flex-1 p-4 overflow-y-auto space-y-4">
-      <div 
-        v-for="(msg, index) in messages" 
-        :key="index" 
-        :class="['flex', msg.sender === 'user' ? 'justify-end' : 'justify-start']"
-      >
-        <div 
-        :class="[
-            'max-w-[75%] rounded-lg p-3 text-sm shadow-sm prose prose-sm', 
-            msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
-        ]"
-        v-html="msg.sender === 'user' ? msg.text : parseMarkdown(msg.text)"
-        >
+    <!-- ── Messages ───────────────────────────────────────── -->
+    <div class="chat-messages" ref="messagesEl">
+      <div v-if="messages.length === 0" class="welcome-block">
+        <p class="welcome-title">আমি কীভাবে সাহায্য করতে পারি?</p>
+        <div class="suggestion-chips">
+          <button
+            v-for="chip in suggestionChips"
+            :key="chip"
+            class="chip"
+            @click="sendSuggestion(chip)"
+          >{{ chip }}</button>
         </div>
       </div>
 
-      <div v-if="isLoading" class="flex justify-start">
-        <div class="bg-white border border-gray-200 rounded-lg rounded-bl-none p-3 shadow-sm flex items-center space-x-2">
-          <span class="text-sm text-gray-500">এজেন্ট চিন্তা করছে</span>
-          <div class="flex space-x-1">
-            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+      <TransitionGroup name="msg" tag="div">
+        <div
+          v-for="msg in messages"
+          :key="msg.id"
+          class="message-row"
+          :class="msg.role"
+        >
+          <div v-if="msg.role === 'assistant'" class="avatar-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="bubble" v-html="renderMarkdown(msg.content)"></div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div v-if="isLoading" key="typing" class="message-row assistant">
+          <div class="avatar-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="bubble typing">
+            <span></span><span></span><span></span>
           </div>
         </div>
-      </div>
+      </TransitionGroup>
     </div>
 
-    <div class="p-3 bg-white border-t border-gray-200">
-      <form @submit.prevent="sendMessage" class="flex items-center space-x-2">
-        <input 
-          v-model="userInput"
-          type="text" 
-          placeholder="এখানে প্রশ্ন করুন (যেমন: CBC টেস্টের দাম কত?)" 
-          class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :disabled="isLoading"
-        />
-        <button 
-          type="submit" 
-          class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 w-9 h-9 flex items-center justify-center transition-colors shadow-md"
-          :disabled="!userInput.trim() || isLoading"
-        >
-          🕊️
-        </button>
-      </form>
+    <!-- ── Input ──────────────────────────────────────────── -->
+    <div class="chat-input-bar">
+      <textarea
+        ref="inputEl"
+        v-model="userInput"
+        placeholder="বার্তা লিখুন..."
+        rows="1"
+        :disabled="isLoading"
+        @keydown.enter.exact.prevent="sendMessage"
+        @input="autoResize"
+      ></textarea>
+      <button
+        class="send-btn"
+        :disabled="isLoading || !userInput.trim()"
+        @click="sendMessage"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
-import { marked } from 'marked';
-import axios from 'axios';
+import { ref, nextTick, onMounted } from 'vue'
+import axios from 'axios'
 
-// স্টেটসমূহ
-const userInput = ref('');
-const isLoading = ref(false);
-const messageBox = ref(null);
+// ── State ──────────────────────────────────────────────────────────────────
 
+const messages    = ref([])   // { id, role: 'user'|'assistant', content }
+const history     = ref([])   // raw history array sent to / returned from API
+const userInput   = ref('')
+const isLoading   = ref(false)
+const messagesEl  = ref(null)
+const inputEl     = ref(null)
 
+let msgIdCounter = 0
+const nextId = () => ++msgIdCounter
 
-// প্রাথমিক মেসেজ (ওয়েলকাম মেসেজ)
-const messages = ref([
-  { 
-    sender: 'ai', 
-    text: 'আসসালামু আলাইকুম! আমি হাসপাতালের এআই অ্যাসিস্ট্যান্ট। আমি আপনাকে সঠিক ডাক্তার খুঁজে পেতে, অ্যাপয়েন্টমেন্ট বুক করতে এবং টেস্টের প্রাইস লিস্ট (যেমন: CBC, ECG ইত্যাদি) জানাতে সাহায্য করতে পারি। বলুন, কীভাবে সাহায্য করতে পারি?' 
-  }
-]);
+const suggestionChips = [
+  'ডাক্তারের তালিকা দেখুন',
+  'অ্যাপয়েন্টমেন্ট নিতে চাই',
+  'টেস্টের মূল্য জানুন',
+  'বেড স্ট্যাটাস',
+  'ওষুধ খুঁজুন',
+]
 
-const parseMarkdown = (text) => {
-  return marked.parse(text, { breaks: true });
-};
+// ── Methods ────────────────────────────────────────────────────────────────
 
-// স্ক্রল অটোমেটিকভাবে নিচে নামানোর ফাংশন
-const scrollToBottom = async () => {
-  await nextTick();
-  if (messageBox.value) {
-    messageBox.value.scrollTop = messageBox.value.scrollHeight;
-  }
-};
+async function sendMessage() {
+  const text = userInput.value.trim()
+  if (!text || isLoading.value) return
 
-// মেসেজ পাঠানোর ফাংশন
-const sendMessage = async () => {
-  if (!userInput.value.trim() || isLoading.value) return;
+  // Push user bubble
+  messages.value.push({ id: nextId(), role: 'user', content: text })
+  userInput.value = ''
+  await nextTick()
+  resetInputHeight()
+  scrollToBottom()
 
-  const userQuery = userInput.value;
-  
-  // ইউজারের মেসেজ চ্যাটে পুশ করা
-  messages.value.push({ sender: 'user', text: userQuery });
-  userInput.value = '';
-  isLoading.value = true;
-  await scrollToBottom();
+  isLoading.value = true
 
   try {
-    // লারাভেল ব্যাকএন্ডের রাউটে রিকোয়েস্ট পাঠানো
-    // (আপনার লারাভেল প্রোজেক্টের আসল ডোমেইন/ইউআরএল বসিয়ে নেবেন)
-    const response = await axios.post('http://localhost:8000/api/chat', {
-      message: userQuery
-    });
+    const res = await axios.post('/api/chat', {
+      message: text,
+      history: history.value,   // ← send full history each turn
+    })
 
-    // ব্যাকএন্ডের ফাইনাল বাংলা রিপ্লাই চ্যাটে পুশ করা
-    messages.value.push({ 
-      sender: 'ai', 
-      text: response.data.reply 
-    });
+    const reply      = res.data.reply   ?? 'দুঃখিত, কোনো উত্তর পাওয়া যায়নি।'
+    history.value    = res.data.history ?? []  // ← server returns updated history
 
-  } catch (error) {
-    console.error("Error communicating with AI Agent:", error);
-    messages.value.push({ 
-      sender: 'ai', 
-      text: 'দুঃখিত, এই মুহূর্তে ব্যাকএন্ড সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না। দয়া করে আবার চেষ্টা করুন।' 
-    });
+    messages.value.push({ id: nextId(), role: 'assistant', content: reply })
+  } catch (err) {
+    console.error('[ChatAgent] API error:', err)
+    messages.value.push({
+      id: nextId(),
+      role: 'assistant',
+      content: 'দুঃখিত, সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।',
+    })
   } finally {
-    isLoading.value = false;
-    await scrollToBottom();
+    isLoading.value = false
+    await nextTick()
+    scrollToBottom()
   }
-};
+}
+
+function sendSuggestion(chip) {
+  userInput.value = chip
+  sendMessage()
+}
+
+function clearChat() {
+  messages.value = []
+  history.value  = []
+  userInput.value = ''
+}
+
+// ── Markdown renderer (lightweight, no dependency) ─────────────────────────
+
+function renderMarkdown(text) {
+  if (!text) return ''
+  return text
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g,     '<em>$1</em>')
+    // Inline code
+    .replace(/`([^`]+)`/g,     '<code>$1</code>')
+    // Bullet lists (lines starting with - or *)
+    .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+    .replace(/((<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    // Numbered list
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // Line breaks
+    .replace(/\n/g, '<br>')
+    // Sanitise – strip any script tags that might slip through
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
+
+function scrollToBottom() {
+  const el = messagesEl.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+function autoResize(e) {
+  const el = e.target
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px'
+}
+
+function resetInputHeight() {
+  if (inputEl.value) inputEl.value.style.height = 'auto'
+}
+
+onMounted(() => inputEl.value?.focus())
 </script>
+
+<style scoped>
+/* ── Layout ────────────────────────────────────────── */
+.chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 780px;
+  margin: 0 auto;
+  background: #f8fafc;
+  font-family: 'Inter', 'Noto Sans Bengali', sans-serif;
+}
+
+/* ── Header ────────────────────────────────────────── */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #0f766e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.header-avatar {
+  width: 38px; height: 38px;
+  background: rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.header-avatar svg { width: 20px; height: 20px; stroke: #fff; }
+.header-info { flex: 1; }
+.header-info h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+.status-text { font-size: 12px; opacity: .85; }
+.clear-btn {
+  background: none; border: none; cursor: pointer;
+  color: #fff; opacity: .7; padding: 6px;
+  border-radius: 6px; transition: opacity .2s;
+}
+.clear-btn:hover { opacity: 1; background: rgba(255,255,255,.15); }
+
+/* ── Messages ──────────────────────────────────────── */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.welcome-block { text-align: center; margin: auto; }
+.welcome-title { font-size: 17px; color: #374151; font-weight: 600; margin-bottom: 16px; }
+.suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip {
+  background: #fff;
+  border: 1.5px solid #0f766e;
+  color: #0f766e;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .18s;
+  font-family: inherit;
+}
+.chip:hover { background: #0f766e; color: #fff; }
+
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 82%;
+}
+.message-row.user { margin-left: auto; flex-direction: row-reverse; }
+.message-row.assistant { margin-right: auto; }
+
+.avatar-sm {
+  width: 30px; height: 30px;
+  background: #0f766e;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.avatar-sm svg { width: 16px; height: 16px; stroke: #fff; }
+
+.bubble {
+  background: #fff;
+  border-radius: 18px 18px 18px 4px;
+  padding: 11px 15px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1f2937;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  word-break: break-word;
+}
+.message-row.user .bubble {
+  background: #0f766e;
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+}
+
+/* Typing indicator */
+.bubble.typing {
+  display: flex; align-items: center; gap: 4px; padding: 14px 18px;
+}
+.bubble.typing span {
+  width: 7px; height: 7px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+.bubble.typing span:nth-child(2) { animation-delay: .2s; }
+.bubble.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-6px); }
+}
+
+/* Transition */
+.msg-enter-active { transition: all .25s ease; }
+.msg-enter-from   { opacity: 0; transform: translateY(10px); }
+
+/* ── Input bar ─────────────────────────────────────── */
+.chat-input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.06);
+}
+.chat-input-bar textarea {
+  flex: 1;
+  resize: none;
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  color: #1f2937;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color .2s;
+  overflow-y: hidden;
+  max-height: 140px;
+}
+.chat-input-bar textarea:focus { border-color: #0f766e; background: #fff; }
+.chat-input-bar textarea:disabled { opacity: .6; cursor: not-allowed; }
+
+.send-btn {
+  width: 42px; height: 42px;
+  background: #0f766e;
+  border: none; border-radius: 12px;
+  color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s; flex-shrink: 0;
+}
+.send-btn:hover:not(:disabled) { background: #0d6560; transform: scale(1.05); }
+.send-btn:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+
+/* Scrollbar */
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
