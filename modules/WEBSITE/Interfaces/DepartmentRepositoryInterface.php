@@ -15,4 +15,6 @@ interface DepartmentRepositoryInterface
     public function create(array $data): Department;
     public function update(Department $department, array $data): Department;
     public function delete(Department $department): bool;
+
+    public function list_for_home_page(): Collection;
 }

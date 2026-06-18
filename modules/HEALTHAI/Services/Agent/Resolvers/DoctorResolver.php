@@ -27,10 +27,17 @@ final class DoctorResolver implements DataResolverInterface
 
         return $doctors->map(fn ($doctor) => [
             'Type'        => 'Doctor',
+            'doctor_id'   => $doctor->id,
             'Name'        => $doctor->name,
             'Designation' => $doctor->designation ?? 'Consultant',
             'Department'  => $doctor->department->name ?? 'General',
             'Schedule'    => $this->formatSchedule($doctor->timetables ?? []),
+            // Image — use full URL if stored as path, or null if absent
+            'image_url'   => $doctor->image
+                ? (filter_var($doctor->image, FILTER_VALIDATE_URL)
+                    ? $doctor->image
+                    : asset('storage/' . ltrim($doctor->image, '/')))
+                : null,
         ])->values()->all();
     }
 
@@ -47,8 +54,6 @@ final class DoctorResolver implements DataResolverInterface
             if (stripos($dept, $keyword) !== false || stripos($keyword, $dept) !== false) {
                 return true;
             }
-
-            // Token-level match: "Orthopedics & Trauma" → individual words
             $tokens = array_filter(
                 explode(' ', str_replace(['&', 'and', 'or', ','], ' ', $keyword)),
                 fn ($w) => strlen($w) > 3,

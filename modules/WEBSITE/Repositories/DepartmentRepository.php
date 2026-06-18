@@ -3,6 +3,7 @@
 namespace Modules\WEBSITE\Repositories;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Modules\WEBSITE\Interfaces\DepartmentRepositoryInterface;
 use Modules\WEBSITE\Models\Department;
 use Override;
@@ -75,5 +76,12 @@ class DepartmentRepository implements DepartmentRepositoryInterface
     public function delete(Department $department): bool
     {
         return (bool) $department->delete();
+    }
+
+    #[Override]
+    public function list_for_home_page(): Collection
+    {
+        return Department::where('is_active', 1)->limit(10)->get();
+        
     }
 }

@@ -18,7 +18,20 @@ return new class extends Migration
             $table->integer('serial')->nullable();
             $table->boolean('is_active')->default(true);
 
+            //styling
             $table->string('text_icon')->nullable();
+            $table->string('bg-color')->nullable();
+            $table->string('text-color')->nullable();
+            $table->string('color')->nullable();
+            $table->longText('custom_css')->nullable();
+
+                        // SEO
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('canonical_url')->nullable();
+            $table->string('og_title')->nullable();
+            $table->text('og_description')->nullable();
+            $table->boolean('indexable')->default(true);
                     
             
             $table->foreignId('parent_id')->nullable()->constrained('departments')->nullOnDelete();

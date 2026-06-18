@@ -14,7 +14,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Department extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, SoftDeletes;
-
     protected $fillable = ['name', 'slug', 'text_icon','tagline', 'shortDesc', 'descriptions', 'parent_id', 'created_by'];
 
     public function parent(): BelongsTo

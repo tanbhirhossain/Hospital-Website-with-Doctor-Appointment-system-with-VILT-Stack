@@ -47,12 +47,9 @@ return new class extends Migration
             // SEO
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
-
             $table->string('canonical_url')->nullable();
-
             $table->string('og_title')->nullable();
             $table->text('og_description')->nullable();
-
             $table->boolean('indexable')->default(true);
 
             $table->foreignId('created_by')->constrained('users');

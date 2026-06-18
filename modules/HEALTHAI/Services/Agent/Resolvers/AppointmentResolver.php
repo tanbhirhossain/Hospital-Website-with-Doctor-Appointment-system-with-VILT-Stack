@@ -8,17 +8,6 @@ use Modules\APPOINTMENT\Services\AppointmentService;
 use Modules\APPOINTMENT\Services\TimeSlotService;
 use Modules\WEBSITE\Services\DoctorService;
 
-/**
- * Handles the full multi-turn appointment booking flow.
- *
- * The LLM drives the conversation — it reads the history and decides what
- * information is still missing. When all required fields are collected, it
- * returns a special JSON action block that this resolver intercepts to
- * actually create the appointment via AppointmentService.
- *
- * Required fields: doctor_id, appointment_date, start_time, end_time,
- *                  patient_name, patient_phone
- */
 final class AppointmentResolver implements DataResolverInterface
 {
     public function __construct(
@@ -28,14 +17,10 @@ final class AppointmentResolver implements DataResolverInterface
     ) {}
 
     /**
-     * $keyword carries the raw user message for this turn (set by AiAgentService).
-     * The actual multi-turn orchestration happens in AgentPrompts + the LLM reply.
-     * This resolver provides structured context data (available doctors + slots)
-     * that the LLM reply prompt uses to guide the conversation.
+     * Returns doctor list as context for the LLM booking flow.
      */
     public function resolve(string $keyword): array
     {
-        // Provide the list of all doctors so the LLM can present choices
         try {
             $doctors = $this->doctorService->getAllDoctors();
 
@@ -44,6 +29,11 @@ final class AppointmentResolver implements DataResolverInterface
                 'name'        => $doctor->name,
                 'designation' => $doctor->designation ?? 'Consultant',
                 'department'  => $doctor->department->name ?? 'General',
+                'image_url'   => $doctor->image
+                    ? (filter_var($doctor->image, FILTER_VALIDATE_URL)
+                        ? $doctor->image
+                        : asset('storage/' . ltrim($doctor->image, '/')))
+                    : null,
                 'schedule'    => $this->formatSchedule($doctor->timetables ?? []),
             ])->values()->all();
         } catch (\Throwable $e) {
@@ -53,27 +43,59 @@ final class AppointmentResolver implements DataResolverInterface
     }
 
     /**
-     * Called by AiAgentService when the LLM signals that all booking details
-     * have been collected and confirmed by the patient.
+     * Create the appointment. Called only after LLM emits the action block
+     * and AiAgentService parses it.
      *
-     * @param  array{doctor_id: int, appointment_date: string, start_time: string,
-     *                end_time: string, patient_name: string, patient_phone: string,
-     *                patient_email?: string, notes?: string} $data
+     * Required: doctor_id, appointment_date, start_time, end_time,
+     *           patient_name, patient_phone
+     * Optional: patient_email, notes
      */
     public function book(array $data): array
     {
+        // Validate required fields before hitting the service
+        $required = ['doctor_id', 'appointment_date', 'start_time', 'end_time', 'patient_name', 'patient_phone'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                return ['success' => false, 'error' => "Missing required field: {$field}"];
+            }
+        }
+
+        // Derive slot_duration from start/end times
+        if (empty($data['slot_duration'])) {
+            try {
+                $start = \Carbon\Carbon::createFromFormat('H:i', substr($data['start_time'], 0, 5));
+                $end   = \Carbon\Carbon::createFromFormat('H:i', substr($data['end_time'], 0, 5));
+                $data['slot_duration'] = (int) $start->diffInMinutes($end);
+            } catch (\Throwable) {
+                $data['slot_duration'] = 30; // safe default
+            }
+        }
+
+        // Remove optional fields that are null/empty so the model doesn't choke
+        foreach (['patient_email', 'notes'] as $opt) {
+            if (empty($data[$opt])) unset($data[$opt]);
+        }
+
         try {
             $appointment = $this->appointmentService->createAppointment($data);
+
+            // Resolve doctor name for the confirmation reply
+            $doctorName = null;
+            try {
+                $doctor     = $this->doctorService->getDoctorById((int) $appointment->doctor_id);
+                $doctorName = $doctor?->name;
+            } catch (\Throwable) {}
 
             return [
                 'success'          => true,
                 'appointment_id'   => $appointment->id,
                 'patient_name'     => $appointment->patient_name,
-                'doctor_id'        => $appointment->doctor_id,
+                'patient_phone'    => $appointment->patient_phone,
+                'patient_email'    => $appointment->patient_email,
+                'doctor_name'      => $doctorName ?? "Doctor #{$appointment->doctor_id}",
                 'appointment_date' => $appointment->appointment_date,
                 'start_time'       => $appointment->start_time,
                 'end_time'         => $appointment->end_time,
-                'slot_duration'    => \Carbon\Carbon::parse($appointment->start_time)->diffInMinutes(\Carbon\Carbon::parse($appointment->end_time)) ?? null,
                 'status'           => $appointment->status,
             ];
         } catch (\InvalidArgumentException $e) {
@@ -84,9 +106,6 @@ final class AppointmentResolver implements DataResolverInterface
         }
     }
 
-    /**
-     * Fetch available time slots for a given doctor and date.
-     */
     public function getAvailableSlots(int $doctorId, string $date): array
     {
         try {

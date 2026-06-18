@@ -46,4 +46,10 @@ class DoctorRepository implements DoctorRepositoryInterface
     {
         return Doctor::with(['department', 'timetables'])->get();
     }
+
+    #[Override]
+    public function allHomePageDoctor()
+    {
+        return Doctor::with(['department', 'timetables'])->where('is_active', 1)->where('is_home_page', 1)->get();
+    }
 }
