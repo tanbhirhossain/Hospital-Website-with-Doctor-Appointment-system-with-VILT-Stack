@@ -31,12 +31,14 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
     },
-    //  server: {
-    //     host: '0.0.0.0', // This allows the server to be reached via any local IP/domain
-    //     port: 5173,
-    //     strictPort: true,
-    //     hmr: {
-    //         host: '103.189.5.82', // This tells the browser WHERE to find Vite
-    //     },
-    // },
+    server: {
+        host: '0.0.0.0', 
+        port: 8009, // 👈 Match package.json port
+        hmr: {
+            host: '192.168.10.215', // 👈 Keeps asset injection linked to your network domain/IP
+        },
+    },
+
+
+
 });
