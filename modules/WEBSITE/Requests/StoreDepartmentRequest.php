@@ -23,9 +23,16 @@ class StoreDepartmentRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:3', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('departments', 'slug')->ignore($departmentId)],
+            
             'shortDesc' => ['nullable', 'string'],
             'descriptions' => ['nullable', 'string'],
             'text_icon' => ['nullable', 'string', 'max:255'],
+            'bg-color' => ['nullable', 'string'],
+            'text-color' => ['nullable', 'string'],
+            'color' => ['nullable', 'string'],
+            'custom_css' => ['nullable', 'string'],
+
+
             'banner_image' => ['nullable', File::image()->max(3 * 1024)],
             'image' => ['nullable', File::image()->max(3 * 1024)],
             'icon_image' => ['nullable', File::image()->max(1024)],

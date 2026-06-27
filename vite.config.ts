@@ -1,12 +1,14 @@
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import path from 'path';
-import tailwindcss from '@tailwindcss/vite'; // ◄--- Ensure import points here
+import tailwindcss from '@tailwindcss/vite';
+import basicSsl from '@vitejs/plugin-basic-ssl'; // 1. Import the plugin
 import { defineConfig } from 'vite';
 
 export default defineConfig({
     plugins: [
-        tailwindcss(), // ◄--- Order matters: Place it first in the array!
+        basicSsl(), // 2. Add it here
+        tailwindcss(),
         laravel({
             input: ['resources/js/app.ts'],
             refresh: [
@@ -33,12 +35,17 @@ export default defineConfig({
     },
     server: {
         host: '0.0.0.0', 
-        port: 8009, // 👈 Match package.json port
+        port: 8009,
+        https: true, // 3. Force HTTPS protocol
         hmr: {
-            host: '192.168.10.215', // 👈 Keeps asset injection linked to your network domain/IP
+            host: '192.168.10.215',
         },
     },
-
-
-
+     cors: {
+        origin: 'https://amzhospitalbd.com', // Ensure this matches your HTTPS ERP URL
+        credentials: true,
+    },
+    headers: {
+        'Access-Control-Allow-Private-Network': 'true', 
+    },
 });

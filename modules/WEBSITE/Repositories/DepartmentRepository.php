@@ -81,7 +81,7 @@ class DepartmentRepository implements DepartmentRepositoryInterface
     #[Override]
     public function list_for_home_page(): Collection
     {
-        return Department::where('is_active', 1)->limit(10)->get();
+        return Department::with('media')->where('is_active', 1)->whereNotNull('text-color')->get();
         
     }
 }

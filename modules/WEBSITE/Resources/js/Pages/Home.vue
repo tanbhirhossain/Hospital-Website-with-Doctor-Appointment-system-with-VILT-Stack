@@ -5,11 +5,11 @@ import FrontendLayout from '../Layout/FrontendLayout.vue'
 
 defineOptions({ layout: FrontendLayout })
 
-// defineProps({
-//     doctors: Array,
-//     departments: Array,
-//     centers: Array
-// });
+defineProps({
+    doctors: Array,
+    departments: Array,
+    centers: Array
+});
 
 
 const currentSlide = ref(0)
@@ -68,85 +68,85 @@ const quickCards = [
 ]
 
 
-const departments = [
-    { 
-        color: 'from-blue-600 to-indigo-700', 
-        textColor: 'text-blue-100', 
-        bg: 'bg-blue-50', 
-        icon: 'fa-heartbeat', 
-        name: 'Cardiology', 
-        subtitle: 'Every heartbeat matters â€” we protect it.', 
-        desc: 'The Cardiology Department at AMZ Hospital Ltd. provides comprehensive heart careâ€”from prevention and diagnosis to advanced treatment.', 
-        specialists: '12+', 
-        beds: '45',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/JOuOIapuAAiJNqpSRhHU.webp',
-        available247: true 
-    },
+// const departments = [
+//     { 
+//         color: 'from-blue-600 to-indigo-700', 
+//         textColor: 'text-blue-100', 
+//         bg: 'bg-blue-50', 
+//         icon: 'fa-heartbeat', 
+//         name: 'Cardiology', 
+//         subtitle: 'Every heartbeat matters â€” we protect it.', 
+//         desc: 'The Cardiology Department at AMZ Hospital Ltd. provides comprehensive heart careâ€”from prevention and diagnosis to advanced treatment.', 
+//         specialists: '12+', 
+//         beds: '45',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/JOuOIapuAAiJNqpSRhHU.webp',
+//         available247: true 
+//     },
     
-    { 
-        color: 'from-emerald-500 to-teal-600', 
-        textColor: 'text-emerald-100', 
-        bg: 'bg-emerald-50', 
-        icon: 'fa-user-md', 
-        name: 'Medicine', 
-        subtitle: 'Right diagnosis begins with the right doctor.', 
-        desc: 'Providing patient-centered care for a wide range of acute and chronic medical conditions with a focus on internal wellness.', 
-        specialists: '4+', 
-        beds: '20',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/5y1N0lFan5dCe0oI6kbX.webp',
+//     { 
+//         color: 'from-emerald-500 to-teal-600', 
+//         textColor: 'text-emerald-100', 
+//         bg: 'bg-emerald-50', 
+//         icon: 'fa-user-md', 
+//         name: 'Medicine', 
+//         subtitle: 'Right diagnosis begins with the right doctor.', 
+//         desc: 'Providing patient-centered care for a wide range of acute and chronic medical conditions with a focus on internal wellness.', 
+//         specialists: '4+', 
+//         beds: '20',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/5y1N0lFan5dCe0oI6kbX.webp',
 
-    },
-    { 
-        color: 'from-purple-500 to-fuchsia-600', 
-        textColor: 'text-purple-100', 
-        bg: 'bg-purple-50', 
-        icon: 'fa-female', 
-        name: 'Gynecology', 
-        subtitle: 'Your partner in health and motherhood.', 
-        desc: 'Dedicated to delivering comprehensive, compassionate, and evidence-based care for women at every stage of life.', 
-        specialists: '9+', 
-        beds: '30',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/9Cf7Ui3e6ONTIP5Goll3.webp',
+//     },
+//     { 
+//         color: 'from-purple-500 to-fuchsia-600', 
+//         textColor: 'text-purple-100', 
+//         bg: 'bg-purple-50', 
+//         icon: 'fa-female', 
+//         name: 'Gynecology', 
+//         subtitle: 'Your partner in health and motherhood.', 
+//         desc: 'Dedicated to delivering comprehensive, compassionate, and evidence-based care for women at every stage of life.', 
+//         specialists: '9+', 
+//         beds: '30',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/9Cf7Ui3e6ONTIP5Goll3.webp',
 
-    },
-    { 
-        color: 'from-red-500 to-orange-600', 
-        textColor: 'text-red-100', 
-        bg: 'bg-red-50', 
-        icon: 'fa-microscope', 
-        name: 'Hepatobiliary', 
-        subtitle: 'Healthy digestion for a healthier life.', 
-        desc: 'Advanced surgical care for complex diseases of the liver, gallbladder, and pancreas using the latest surgical technology.', 
-        specialists: '8+', 
-        beds: '15',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/xHagfcfncDADCrCfapm5.webp',
+//     },
+//     { 
+//         color: 'from-red-500 to-orange-600', 
+//         textColor: 'text-red-100', 
+//         bg: 'bg-red-50', 
+//         icon: 'fa-microscope', 
+//         name: 'Hepatobiliary', 
+//         subtitle: 'Healthy digestion for a healthier life.', 
+//         desc: 'Advanced surgical care for complex diseases of the liver, gallbladder, and pancreas using the latest surgical technology.', 
+//         specialists: '8+', 
+//         beds: '15',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/xHagfcfncDADCrCfapm5.webp',
 
-    },
-    { 
-        color: 'from-amber-500 to-yellow-600', 
-        textColor: 'text-amber-100', 
-        bg: 'bg-amber-50', 
-        icon: 'fa-baby', 
-        name: 'Pediatrics', 
-        subtitle: 'Caring for today, building tomorrow.', 
-        desc: 'Dedicated to the health and well-being of infants, children, and adolescents with a gentle, child-friendly approach.', 
-        specialists: '6+', 
-        beds: '25',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/j0pM1NzDzbZpFT5ZDyov.webp',
-    },
-    { 
-        color: 'from-indigo-500 to-blue-700', 
-        textColor: 'text-indigo-100', 
-        bg: 'bg-indigo-50', 
-        icon: 'fa-procedures', 
-        name: 'Surgery', 
-        subtitle: 'Precision surgery with minimal scars.', 
-        desc: 'Specializing in Laparoscopic and Laser solutions for a wide range of conditions to ensure faster recovery times.', 
-        specialists: '7+', 
-        beds: '40',
-        image : 'https://amzhospitalbd.com/storage/departments/September2025/ArSkDHbaqGg8c8k0ZqCL.webp',
-    }
-]
+//     },
+//     { 
+//         color: 'from-amber-500 to-yellow-600', 
+//         textColor: 'text-amber-100', 
+//         bg: 'bg-amber-50', 
+//         icon: 'fa-baby', 
+//         name: 'Pediatrics', 
+//         subtitle: 'Caring for today, building tomorrow.', 
+//         desc: 'Dedicated to the health and well-being of infants, children, and adolescents with a gentle, child-friendly approach.', 
+//         specialists: '6+', 
+//         beds: '25',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/j0pM1NzDzbZpFT5ZDyov.webp',
+//     },
+//     { 
+//         color: 'from-indigo-500 to-blue-700', 
+//         textColor: 'text-indigo-100', 
+//         bg: 'bg-indigo-50', 
+//         icon: 'fa-procedures', 
+//         name: 'Surgery', 
+//         subtitle: 'Precision surgery with minimal scars.', 
+//         desc: 'Specializing in Laparoscopic and Laser solutions for a wide range of conditions to ensure faster recovery times.', 
+//         specialists: '7+', 
+//         beds: '40',
+//         image : 'https://amzhospitalbd.com/storage/departments/September2025/ArSkDHbaqGg8c8k0ZqCL.webp',
+//     }
+// ]
 
 const doctors = [
     { color: 'from-blue-400 to-blue-600', name: 'Dr. Ahmedul Kabir', specialty: 'Medicine', degree: 'MBBS, FCPS, FACP, FRCP', exp: '15+', photo: 'https://amzhospitalbd.com/storage/doctors/April2024/H2qkQbIjHRLFzvPwoNEt.jpg' },
@@ -310,7 +310,7 @@ const leadershipPreview = (message: string) => {
     const filters = ['all', 'infrastructure', 'facilities', 'equipment', 'departments']
     const filteredGallery = () => activeFilter.value === 'all' ? galleryItems : galleryItems.filter(i => i.category === activeFilter.value)
 
-    // â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   
     const servicesList = [
         { bg: 'from-blue-50', icon: 'fa-ambulance', title: '24/7 Emergency Services', desc: 'Round-the-clock emergency medical care with rapid response team', items: ['Critical Care Unit', 'Intensive Care Unit', 'High Dependancy Unit', 'Dialysis'] },
         { bg: 'from-green-50', icon: 'fa-x-ray', title: 'Diagnostic Services', desc: 'Advanced diagnostic facilities with latest technology', items: ['CT Scan & MRI', 'Ultrasound', 'Laboratory Tests', 'Cath Lab'] },
@@ -320,7 +320,6 @@ const leadershipPreview = (message: string) => {
         { bg: 'from-pink-50', icon: 'fa-pills', title: 'Pharmacy Services', desc: '24/7 pharmacy with all essential medicines', items: [] },
     ]
 
-    // â”€â”€ Health Packages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const packages = [
         { bg: 'bg-blue-100', color: 'text-blue-800', icon: 'fa-user-check', title: 'Basic Checkup', desc: 'General physician consultation, CBC, blood sugar, urine R/E, and ECG.', price: 'BDT 2,500' },
         { bg: 'bg-pink-100', color: 'text-pink-700', icon: 'fa-heartbeat', title: 'Women Wellness', desc: 'Gyne consultation, thyroid profile, vitamin D, breast exam, and pelvic USG.', price: 'BDT 4,800' },
@@ -328,7 +327,6 @@ const leadershipPreview = (message: string) => {
         { bg: 'bg-amber-100', color: 'text-amber-700', icon: 'fa-users', title: 'Family Package', desc: 'Combined health screening for 2 adults including consultation and core labs.', price: 'BDT 8,900' },
     ]
 
-    // â”€â”€ Centre of Excellence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const centers = [
         { id: 'coe-fertility-research-center', bg: 'bg-blue-100', color: 'text-blue-800', icon: 'fa-flask', title: 'Fertility & Research Center', desc: 'Personalized fertility assessment, treatment planning, and research-driven care pathways.' },
         { id: 'coe-hypospadias-center', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: 'fa-user-shield', title: 'Hypospadias center', desc: 'Child-focused surgical correction with coordinated follow-up and family support.' },
@@ -340,7 +338,6 @@ const leadershipPreview = (message: string) => {
         { id: 'coe-hepatobiliary-pancreatic-surgery-center', bg: 'bg-lime-100', color: 'text-lime-700', icon: 'fa-procedures', title: 'Hepatobiliary & Pancreatic Surgery Center', desc: 'Advanced surgical management for complex liver, biliary, and pancreatic diseases.' },
     ]
 
-    // â”€â”€ Testimonials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const blogPosts = [
         {
             id: 'heart-care',
@@ -390,7 +387,6 @@ const leadershipPreview = (message: string) => {
     const expandedTestimonials = ref({})
     const toggleTestimonial = (i) => { expandedTestimonials.value[i] = !expandedTestimonials.value[i] }
 
-    // â”€â”€ Stats Counter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const stats = [
         { target: 300000, label: 'Patients Treated' },
         { target: 79, label: 'Expert Doctors' },
@@ -400,7 +396,6 @@ const leadershipPreview = (message: string) => {
     const statValues = ref(stats.map(() => 0))
     let counterAnimated = false
 
-    // â”€â”€ Partners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const partners = [
     { name: 'AB Bank', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/9Y2oTmRomsnbfdh3cG50.png' },
     { name: 'Ekushe TV', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/SLboYCDAU6ngOHkQ0TxA.png' },
@@ -423,11 +418,9 @@ const leadershipPreview = (message: string) => {
         return filledPartners.slice(0, MIN_PARTNERS_ON_SCREEN)
     })
 
-    // â”€â”€ Appointment Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const appointmentAvailableWeekdays = [0, 1, 2, 3, 4, 6]
     const appointmentBlockedDates = []
 
-    // â”€â”€ Newsletter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const newsletterEmail = ref('')
     const newsletterSuccess = ref(false)
     const submitNewsletter = () => {
@@ -436,7 +429,6 @@ const leadershipPreview = (message: string) => {
         newsletterEmail.value = ''
     }
 
-    // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     onMounted(() => {
         startAuto()
 
@@ -508,7 +500,6 @@ const leadershipPreview = (message: string) => {
     })
 </script>
 <template>
-    <!-- â”€â”€ HERO SLIDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="home" role="region" aria-label="Hero section" class="relative scroll-reveal reveal-home fade-in-0 zoom-in-95 duration-700">
         <div class="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
             <div v-for="(slide, i) in slides" :key="i"
@@ -558,7 +549,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ QUICK INFO CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section class="py-0 relative -mt-16 z-40 scroll-reveal reveal-quick fade-in-0 slide-in-from-bottom-8 duration-700">
         <!-- <div class="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-gradient-to-r from-sky-100 via-emerald-50 to-amber-100 blur-2xl"></div>
         <div class="pointer-events-none absolute inset-x-0 -bottom-24 h-48 bg-gradient-to-r from-indigo-50 via-rose-50 to-cyan-50 blur-2xl"></div> -->
@@ -591,7 +581,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ ABOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="about" role="region" aria-label="About us" class="py-20 bg-white scroll-reveal reveal-about fade-in-0 slide-in-from-left-12 duration-700">
         <div class="container mx-auto px-4">
             <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -644,7 +633,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ WHY CHOOSE US â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section class="py-20 bg-gradient-to-br from-blue-50 to-indigo-50 scroll-reveal reveal-why fade-in-0 slide-in-from-bottom-10 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
@@ -677,7 +665,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ DEPARTMENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="departments" class="py-24 bg-slate-50 relative overflow-hidden scroll-reveal reveal-departments fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
         
@@ -696,34 +683,34 @@ const leadershipPreview = (message: string) => {
                     class="premium-sheen group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200/50 scroll-reveal">
 
                     <div class="relative overflow-hidden p-8">
-                        <img
-                            :src="dept.image || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+                      <img
+                            :src="dept?.banner_url"
                             alt="Department background"
                             class="absolute inset-0 h-full w-full object-cover object-right"
                         />
-                        <div :class="`absolute inset-0 bg-gradient-to-br ${dept.color} opacity-70`"></div>
+                        <div :class="`absolute inset-0 bg-gradient-to-br ${dept['color']} opacity-70`"></div>
                         <div class="absolute -right-14 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl transition-all duration-500 group-hover:bg-white/25"></div>
                         <div class="absolute bottom-0 left-0 h-px w-full bg-white/25"></div>
 
                         <div class="relative z-10 mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/25 bg-white/20 shadow-inner backdrop-blur-md transition-transform duration-500 group-hover:rotate-6">
-                            <i :class="`fas ${dept.icon} text-3xl text-white transition-transform duration-500 group-hover:scale-110`"></i>
+                            <i :class="`fas ${dept['text_icon']} text-3xl text-white transition-transform duration-500 group-hover:scale-110`"></i>
                         </div>
 
-                        <h3 class="relative z-10 mb-2 text-2xl font-black tracking-tight text-white">{{ dept.name }}</h3>
-                        <p :class="`${dept.textColor} relative z-10 text-sm leading-snug opacity-90 line-clamp-2`">
-                            {{ dept.subtitle }}
+                        <h3 class="relative z-10 mb-2 text-2xl font-black tracking-tight text-white">{{ dept['name'] }}</h3>
+                        <p :class="`${dept['text-color']} relative z-10 text-sm leading-snug opacity-90 line-clamp-2`">
+                            {{ dept.tagline }}
                         </p>
                     </div>
 
                     <div class="flex flex-grow flex-col p-8">
                         <p class="mb-8 min-h-[4.5rem] line-clamp-3 text-base leading-relaxed text-slate-600">
-                            {{ dept.desc }}
+                            {{ dept['striped_desc'] }}
                         </p>
 
                         <div class="mb-7 grid grid-cols-1 gap-3">
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Specialists</p>
-                                <p class="mt-1 text-sm font-extrabold text-slate-800">{{ dept.specialists }}</p>
+                                <p class="mt-1 text-sm font-extrabold text-slate-800">{{ dept.specialists }}+</p>
                             </div>
                         </div>
 
@@ -752,7 +739,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ CENTRE OF EXCELLENCE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="center-of-excellence" role="region" aria-label="Center Of Excellence" class="py-20 bg-gradient-to-br from-slate-50 to-blue-50 scroll-reveal reveal-centers fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-14">
@@ -778,7 +764,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ SERVICES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="services" role="region" aria-label="Healthcare services" class="py-20 bg-white scroll-reveal reveal-services fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
@@ -801,7 +786,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ DOCTORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
    <!--<section id="doctors" role="region" aria-label="Our doctors" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50 scroll-reveal reveal-doctors fade-in-0 slide-in-from-right-10 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
@@ -882,7 +866,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ GALLERY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="gallery" role="region" aria-label="Hospital gallery" class="py-20 bg-white scroll-reveal reveal-gallery fade-in-0 zoom-in-95 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
@@ -917,7 +900,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ HEALTH PACKAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="health-packages" role="region" aria-label="Health packages" class="py-20 bg-gradient-to-b from-slate-50 to-white scroll-reveal reveal-packages fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-14">
@@ -940,7 +922,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ APPOINTMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="appointment" role="region" aria-label="Book appointment"
         class="py-20 bg-gradient-to-br from-blue-800 to-sky-500 text-white relative overflow-hidden premium-shine-section scroll-reveal reveal-appointment fade-in-0 zoom-in-95 duration-700">
         <div class="absolute inset-0 opacity-10">
@@ -982,7 +963,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ TESTIMONIALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="testimonials" role="region" aria-label="Patient testimonials" class="py-20 bg-white scroll-reveal reveal-testimonials fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
@@ -1020,7 +1000,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ STATISTICS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="stats-section" class="py-20 bg-gradient-to-r from-blue-800 to-sky-500 text-white premium-shine-section scroll-reveal fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -1034,7 +1013,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ BLOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
    
    <!-- <section id="blog" role="region" aria-label="Latest blog posts" class="py-20 bg-white scroll-reveal reveal-blog fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
@@ -1080,7 +1058,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>-->
 
-    <!-- â”€â”€ NEWSLETTER + PARTNERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="newsletter-partners" class="py-20 bg-gradient-to-b from-white to-slate-50 scroll-reveal reveal-newsletter fade-in-0 zoom-in-95 duration-700">
         <div class="container mx-auto px-4">
             <div class="max-w-5xl mx-auto mb-14">
@@ -1156,7 +1133,6 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-    <!-- â”€â”€ CONTACT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section id="contact" role="region" aria-label="Contact information" class="py-20 bg-white scroll-reveal reveal-contact fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">

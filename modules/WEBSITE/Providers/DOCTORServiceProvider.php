@@ -31,6 +31,7 @@ class DOCTORServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/../Resources/views', 'doctor');
         $this->loadRoutesFrom(__DIR__.'/../Routes/web.php');
+       
 
         if (file_exists(__DIR__.'/../Routes/api.php')) {
             $this->loadRoutesFrom(__DIR__.'/../Routes/api.php');

@@ -23,6 +23,7 @@ class DepartmentService
     ) {}
 
 
+    
     public function getAllDepartments(array $filters = []): LengthAwarePaginator
     {
         return $this->departmentRepository->all($filters);

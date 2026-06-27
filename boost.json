@@ -1,6 +1,6 @@
 {
     "agents": [
-        "codex"
+        "claude_code"
     ],
     "cloud": false,
     "guidelines": true,
@@ -9,6 +9,7 @@
     "sail": false,
     "skills": [
         "laravel-best-practices",
+        "mcp-development",
         "pest-testing",
         "inertia-vue-development",
         "tailwindcss-development"

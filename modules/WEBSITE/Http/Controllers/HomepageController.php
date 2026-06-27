@@ -32,6 +32,8 @@ class HomepageController extends Controller
             'departments' => $this->deptRepo->list_for_home_page(),
             'centers' => $this->coeRepo->all()    
         ]);
+
+
     }
     
 }
