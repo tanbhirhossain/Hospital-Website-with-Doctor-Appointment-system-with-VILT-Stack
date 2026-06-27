@@ -45,6 +45,10 @@ class Department extends Model implements HasMedia
         'updated_by',
     ];
 
+    protected $casts = [
+        'serial' => 'integer'
+    ];
+
     protected $appends = ['banner_url', 'striped_desc', 'specialists'];
 
     public function doctors()
@@ -54,7 +58,7 @@ class Department extends Model implements HasMedia
 
     public function getSpecialistsAttribute()
     {
-        return $this->doctors()->count();
+        return $this->doctors_count ?? $this->doctors()->count();   
     }
 
     

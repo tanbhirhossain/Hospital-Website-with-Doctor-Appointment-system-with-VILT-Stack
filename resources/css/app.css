@@ -1,6 +1,33 @@
 @import "tailwindcss";
 
 @theme {
+
+/* Premium Left-to-Right layout shimmer keyframes */
+  --keyframes-shimmer: {
+    0% { background-position: 200% 0; }
+    100% { background-position: -50% 0; }
+  };
+
+  /* Title Shimmer */
+  --keyframes-shimmer: {
+    0% { background-position: 200% 0; }
+    100% { background-position: -50% 0; }
+  };
+  --animate-shimmer: shimmer 4s linear infinite;
+
+  /* NEW: Auto Sweep Carousel Track Keyframes */
+  --keyframes-marquee: {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(calc(-100% - 1rem)); }
+  };
+  /* Adjust '12s' lower for faster movement or higher for slower speed */
+  --animate-marquee: marquee 12s linear infinite;
+
+  /* Attach keyframes to an animation token */
+  --animate-shimmer: shimmer 4s linear infinite;
+
+  /* Bind the keyframes to a utility utility class name */
+  --animate-shimmer: shimmer 3.5s linear infinite;
   /* 1. Register your custom fonts */
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
 

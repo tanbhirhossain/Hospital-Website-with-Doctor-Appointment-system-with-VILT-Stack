@@ -42,9 +42,13 @@ class DepartmentRepository implements DepartmentRepositoryInterface
                           ->orWhere('shortDesc', 'like', "%{$search}%");
                 });
             })
-            ->latest('id')
+            ->with('media')
+            ->where('is_active', 1)
+            ->orderBy('serial')
             ->get(); // ?? ????? paginate ?? ???? get() ??????? ??? ???
     }
+
+
 
     #[Override]
     public function findById(int $id): Department
