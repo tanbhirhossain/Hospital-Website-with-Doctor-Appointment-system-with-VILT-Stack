@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\WEBSITE\Http\Controllers;
+namespace Modules\FRONTEND\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
@@ -27,7 +27,7 @@ class HomepageController extends Controller
 
         // dd($data);
 
-        return Inertia::render('WEBSITE::Home',[
+        return Inertia::render('FRONTEND::Home',[
             'doctors' => $this->drRepo->allHomePageDoctor(),
             'departments' => $this->deptRepo->list_for_home_page(),
             'centers' => $this->coeRepo->all()    
