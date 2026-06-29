@@ -42,7 +42,7 @@ class DepartmentRepository implements DepartmentRepositoryInterface
                           ->orWhere('shortDesc', 'like', "%{$search}%");
                 });
             })
-            ->with('media')
+            ->with(['media', 'doctors', 'doctors.media'])
             ->where('is_active', 1)
             ->orderBy('serial')
             ->get(); // ?? ????? paginate ?? ???? get() ??????? ??? ???
@@ -59,7 +59,8 @@ class DepartmentRepository implements DepartmentRepositoryInterface
     #[Override]
     public function findBySlug(string $slug): Department
     {
-        return Department::query()->where('slug', $slug)->firstOrFail();
+        return Department::query()->with(['media', 'doctors', 'doctors.media'])
+                        ->where('slug', $slug)->firstOrFail();
     }
 
     #[Override]

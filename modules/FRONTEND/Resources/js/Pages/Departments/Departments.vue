@@ -111,7 +111,7 @@
                                 </div>
                             </div>
 
-                            <a href="#appointment"
+                            <a :href="`/departments/${dept.slug}`"
                                 class="group/btn mt-auto inline-flex items-center justify-between rounded-2xl bg-gradient-to-r from-slate-900 to-blue-900 px-5 py-3.5 text-white shadow-lg shadow-blue-900/20 transition-all duration-300 hover:from-blue-800 hover:to-sky-600 hover:shadow-xl hover:shadow-sky-300/40 active:scale-[0.98]">
                                 <span class="text-xs font-bold uppercase tracking-[0.16em]">Read More</span>
                                 <span class="ml-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-all duration-300 group-hover/btn:translate-x-1 group-hover/btn:bg-white/30">

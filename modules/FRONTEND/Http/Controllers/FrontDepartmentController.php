@@ -12,10 +12,18 @@ class FrontDepartmentController extends Controller
         private DepartmentRepositoryInterface $departRepo
     ){}
     public function index(){
-
         
         return Inertia::render('FRONTEND::Departments/Departments',[
             'departments' => $this->departRepo->allUnpaginated()
+        ]);
+    }
+
+    public function details($slug){
+        // dd($this->departRepo->findBySlug($slug));
+        return Inertia::render('FRONTEND::Departments/Details',[
+            'currentDepartment' => $this->departRepo->findBySlug($slug),
+            'departments' => $this->departRepo->allUnpaginated(),
+            
         ]);
     }
 }

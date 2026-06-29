@@ -12,6 +12,7 @@ interface DoctorRepositoryInterface{
     public function findByid(int $id): Doctor;
     public function findBySlug(string $slug): Doctor;
     public function all();
+    public function allActive();
     public function allHomePageDoctor();
 
     

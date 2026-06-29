@@ -786,7 +786,7 @@ const leadershipPreview = (message: string) => {
         </div>
     </section>
 
-   <!--<section id="doctors" role="region" aria-label="Our doctors" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50 scroll-reveal reveal-doctors fade-in-0 slide-in-from-right-10 duration-700">
+   <section id="doctors" role="region" aria-label="Our doctors" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50 scroll-reveal reveal-doctors fade-in-0 slide-in-from-right-10 duration-700">
         <div class="container mx-auto px-4">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Expert Doctors</h2>
@@ -819,7 +819,7 @@ const leadershipPreview = (message: string) => {
                 </a>
             </div>
         </div>
-    </section> -->
+    </section> 
 
     <!-- Leadership -->
     <section id="leadership" role="region" aria-label="Leadership messages" class="py-20 bg-gradient-to-b from-blue-50/60 via-white to-white scroll-reveal fade-in-0 slide-in-from-bottom-8 duration-700">
@@ -1014,7 +1014,7 @@ const leadershipPreview = (message: string) => {
     </section>
 
    
-   <!-- <section id="blog" role="region" aria-label="Latest blog posts" class="py-20 bg-white scroll-reveal reveal-blog fade-in-0 slide-in-from-bottom-8 duration-700">
+    <section id="blog" role="region" aria-label="Latest blog posts" class="py-20 bg-white scroll-reveal reveal-blog fade-in-0 slide-in-from-bottom-8 duration-700">
         <div class="container mx-auto px-4">
             <div class="mb-14 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -1056,7 +1056,7 @@ const leadershipPreview = (message: string) => {
                 </article>
             </div>
         </div>
-    </section>-->
+    </section>
 
     <section id="newsletter-partners" class="py-20 bg-gradient-to-b from-white to-slate-50 scroll-reveal reveal-newsletter fade-in-0 zoom-in-95 duration-700">
         <div class="container mx-auto px-4">

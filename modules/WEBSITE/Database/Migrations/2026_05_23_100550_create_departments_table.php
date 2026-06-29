@@ -13,8 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('tagline')->nullable();
-            $table->text('shortDesc')->nullable();
-            $table->longText('descriptions')->nullable();
+
             $table->integer('serial')->nullable();
             $table->boolean('is_active')->default(true);
 
@@ -25,7 +24,14 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->longText('custom_css')->nullable();
 
-                        // SEO
+            //Content
+            $table->longText('descriptions')->nullable();
+            $table->text('shortDesc')->nullable();
+            // $table->text('services')->nullable();
+            // $table->text('common_condition_treated')->nullable();
+            // $table->text('associated_health_packages')->nullable();
+
+            // SEO
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
             $table->string('canonical_url')->nullable();

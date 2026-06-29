@@ -43,6 +43,13 @@ class Doctor extends Model implements HasMedia
         'updated_by',
     ];
 
+     
+    protected $appends = ['profile_image_url'];
+    
+
+
+
+
     // MEDIA COLLECTIONS
     public function registerMediaCollections(): void
     {
@@ -52,6 +59,10 @@ class Doctor extends Model implements HasMedia
         $this->addMediaCollection('gallery');
 
         $this->addMediaCollection('certificates');
+    }
+
+    public function getProfileImageUrlAttribute(){
+        return $this->getFirstMediaUrl('profile_image');
     }
 
     public function department()
