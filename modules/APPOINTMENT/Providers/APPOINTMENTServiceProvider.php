@@ -4,10 +4,7 @@ namespace Modules\APPOINTMENT\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\APPOINTMENT\Interfaces\AppointmentRepositoryInterface;
-use Modules\APPOINTMENT\Interfaces\AppointmentServiceInterface;
-use Modules\APPOINTMENT\Interfaces\TimeSlotServiceInterface;
 use Modules\APPOINTMENT\Repositories\AppointmentRepository;
-use Modules\APPOINTMENT\Services\AppointmentService;
 use Modules\APPOINTMENT\Services\TimeSlotService;
 
 class APPOINTMENTServiceProvider extends ServiceProvider
@@ -18,8 +15,7 @@ class APPOINTMENTServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AppointmentRepositoryInterface::class, AppointmentRepository::class);
-        $this->app->bind(AppointmentServiceInterface::class, AppointmentService::class);
-        $this->app->bind(TimeSlotServiceInterface::class, TimeSlotService::class);
+        $this->app->bind( TimeSlotService::class);
     }
 
 

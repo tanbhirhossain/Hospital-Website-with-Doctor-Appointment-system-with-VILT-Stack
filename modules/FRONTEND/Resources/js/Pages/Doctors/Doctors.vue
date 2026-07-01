@@ -183,7 +183,7 @@
                                 </div>
 
                                 <div class="p-5 md:p-6 pt-0 mt-auto">
-                                    <a href="#appointment"
+                                    <a :href="`/doctors/${doc.slug}`"
                                         class="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-slate-900 to-blue-950 text-white text-center py-3.5 rounded-xl text-sm font-bold shadow-md shadow-slate-950/10 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:shadow-blue-600/20 active:scale-[0.98] transition-all duration-300">
                                         <span>Book Appointment</span>
                                         <i class="fas fa-calendar-alt text-xs opacity-80 group-hover:translate-x-0.5 transition-transform"></i>

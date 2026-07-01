@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\APPOINTMENT\Http\Controllers\AppointmentController;
 use Modules\APPOINTMENT\Http\Controllers\BookingController;
+use Modules\APPOINTMENT\Services\TimeSlotService;
+use Modules\WEBSITE\Interfaces\DoctorTimetableRepositoryInterface;
 
 Route::middleware(['web', 'auth'])->prefix('admin/appointments')->name('appointments.')->group(function () {
     Route::get('/', [AppointmentController::class, 'index'])->name('index');
@@ -24,4 +26,12 @@ Route::prefix('booking')->name('booking.')->group(function () {
     Route::get('/', [BookingController::class, 'index'])->name('index');
     Route::get('/available-slots', [BookingController::class, 'getAvailableSlots'])->name('available-slots');
     Route::post('/', [BookingController::class, 'store'])->name('store');
+});
+
+Route::get('test-slot', function(\Modules\APPOINTMENT\Services\TimeSlotService $slot, DoctorTimetableRepositoryInterface $timetableRepo) {
+    // $data = $slot->getTimeSlotDateWise(39, '2026-07-01', '2026-07-31');
+    // return response()->json($data);
+
+    $data = $timetableRepo->getDoctorAvilabilityDateByRange(39, '2026-07-01', '2026-07-31');
+    return response()->json($data);
 });

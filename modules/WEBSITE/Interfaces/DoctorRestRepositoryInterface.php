@@ -13,6 +13,7 @@ interface DoctorRestRepositoryInterface{
 
     public function findByid(int $id): DoctorRest;
     public function findByDrIdAndDate(int $drid, Carbon $date): DoctorRest;
+    public function findByDrIdAndDateRange(int $drId, Carbon $startDate, Carbon $endDate);
     public function findByDrId(int $drid): Collection;
 
     public function all();

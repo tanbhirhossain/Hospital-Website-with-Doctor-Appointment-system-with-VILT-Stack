@@ -2,7 +2,10 @@
 
 namespace Modules\WEBSITE\Repositories;
 
+use Carbon\Carbon;
 use Modules\WEBSITE\Interfaces\DoctorRestRepositoryInterface;
+use Modules\WEBSITE\Models\DoctorRest;
+use Override;
 
 class DoctorRestRepository implements DoctorRestRepositoryInterface{
     public function create(array $data): \Modules\WEBSITE\Models\DoctorRest
@@ -43,6 +46,23 @@ class DoctorRestRepository implements DoctorRestRepositoryInterface{
     public function all()
     {
         return \Modules\WEBSITE\Models\DoctorRest::all();
+    }
+
+    #[Override]
+
+    public function findByDrIdAndDateRange(int $drId, Carbon $startDate, Carbon $endDate)
+    {
+        return DoctorRest::where('doctor_id', $drId)
+            ->where('is_active', true) // সাধারণত একটিভ রেস্টগুলোই খোঁজা হয়
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                    });
+            })
+            ->get();
     }
     
 }

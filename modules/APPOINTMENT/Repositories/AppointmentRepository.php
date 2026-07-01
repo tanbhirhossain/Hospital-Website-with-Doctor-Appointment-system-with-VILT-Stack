@@ -1,135 +1,159 @@
-<?php
+<?php 
 
 namespace Modules\APPOINTMENT\Repositories;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Carbon\Carbon;
 use Modules\APPOINTMENT\Interfaces\AppointmentRepositoryInterface;
 use Modules\APPOINTMENT\Models\Appointment;
-use Modules\APPOINTMENT\Support\AppointmentStatus;
+use Override;
 
 class AppointmentRepository implements AppointmentRepositoryInterface
 {
-    public function __construct(
-        private readonly Appointment $model,
-    ) {}
-
-    public function create(array $data)
+    #[Override]
+    public function create(array $data): Appointment
     {
-        return $this->model->create($data);
+        return Appointment::create($data);
     }
 
-    public function update(Appointment $appointment, array $data)
+    #[Override]
+    public function update(Appointment $appointment, array $data): Appointment
     {
         $appointment->update($data);
-        return $appointment->fresh();
+        return $appointment;
     }
 
+    #[Override]
     public function delete(Appointment $appointment): void
     {
         $appointment->delete();
     }
 
-    public function findById(int $id): ?Appointment
+    #[Override]
+    public function changeStaus(Appointment $appointment, string $status)
     {
-        return $this->model->with('doctor')->findOrFail($id);
+        $appointment->update(['status' => $status]);
+        return $appointment;
     }
 
-    public function all(): Collection
+    #[Override]
+    public function confirmBooking(Appointment $appointment)
     {
-        return $this->model->with('doctor')
+        // স্ট্যাটাস confirmed এবং মাইগ্রেশনের confirmed_at ফিল্ডটি টাইমস্ট্যাম্প সহ আপডেট হবে
+        $appointment->update([
+            'status' => 'confirmed',
+            'confirmed_at' => Carbon::now()
+        ]);
+        return $appointment;
+    }
+
+    #[Override]
+    public function cancelBooking(Appointment $appointment)
+    {
+        // কন্ট্রোলার বা রিকোয়েস্ট থেকে cancellation_reason পাস করার ব্যবস্থা রাখা ভালো 
+        // এখানে বেসিক স্ট্যাটাস আপডেট করা হলো
+        $appointment->update([
+            'status' => 'cancelled'
+        ]);
+        return $appointment;
+    }
+
+    #[Override]
+    public function findById(int $id)
+    {
+        return Appointment::find($id);
+    }
+
+    #[Override]
+    public function findByDoctor(int $doctorId)
+    {
+        return Appointment::where('doctor_id', $doctorId)
             ->orderBy('appointment_date', 'desc')
             ->orderBy('start_time', 'asc')
             ->get();
     }
 
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    #[Override]
+    public function findByPatient(int $phone)
     {
-        $query = $this->model->with('doctor')
+        // ইন্টারফেস অনুযায়ী ফোন নম্বর ইন্টিজার হিসেবে রিসিভ করা হচ্ছে
+        return Appointment::where('patient_phone', $phone)
             ->orderBy('appointment_date', 'desc')
-            ->orderBy('start_time', 'asc');
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['doctor_id'])) {
-            $query->where('doctor_id', $filters['doctor_id']);
-        }
-
-        if (!empty($filters['date'])) {
-            $query->where('appointment_date', $filters['date']);
-        }
-
-        if (!empty($filters['date_from'])) {
-            $query->where('appointment_date', '>=', $filters['date_from']);
-        }
-
-        if (!empty($filters['date_to'])) {
-            $query->where('appointment_date', '<=', $filters['date_to']);
-        }
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('patient_name', 'LIKE', "%{$search}%")
-                  ->orWhere('patient_phone', 'LIKE', "%{$search}%")
-                  ->orWhere('patient_email', 'LIKE', "%{$search}%");
-            });
-        }
-
-        return $query->paginate($perPage)->withQueryString();
+            ->get();
     }
 
-    public function getBookedSlots(int $doctorId, string $date): Collection
+    #[Override]
+    public function checkTimeSlotAvailability(int $doctorId, string $date, string $startTime)
     {
-        return $this->model->where('doctor_id', $doctorId)
-            ->where('appointment_date', $date)
-            ->where('status', '!=', AppointmentStatus::CANCELLED)
-            ->get(['start_time', 'end_time'])
-            ->map(fn ($item) => [
-                'start_time' => $item->start_time instanceof \DateTimeInterface
-                    ? $item->start_time->format('H:i')
-                    : $item->start_time,
-                'end_time' => $item->end_time instanceof \DateTimeInterface
-                    ? $item->end_time->format('H:i')
-                    : $item->end_time,
-            ]);
+        $exists = Appointment::where('doctor_id', $doctorId)
+            ->whereDate('appointment_date', $date)
+            ->whereTime('start_time', $startTime)
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        return !$exists;
     }
 
-public function isSlotBooked(
-    int $doctorId,
-    string $date,
-    string $startTime,
-    string $endTime,
-    ?int $ignoreAppointmentId = null
-): bool {
-    $startTime = strlen($startTime) === 5 ? $startTime . ':00' : $startTime;
-    $endTime   = strlen($endTime) === 5 ? $endTime . ':00' : $endTime;
-
-    return $this->model
-        ->where('doctor_id', $doctorId)
-        ->whereDate('appointment_date', $date)
-        ->where('status', '!=', AppointmentStatus::CANCELLED)
-        ->when($ignoreAppointmentId, function ($query) use ($ignoreAppointmentId) {
-            $query->where('id', '!=', $ignoreAppointmentId);
-        })
-        ->where(function ($query) use ($startTime, $endTime) {
-            $query
-                ->where(function ($q) use ($startTime, $endTime) {
-                    $q->where('start_time', '<', $endTime)
-                      ->where('end_time', '>', $startTime);
-                });
-        })
-        ->exists();
-}
-
-    public function countByStatus(?string $status = null): int
+    #[Override]
+    public function getBookedSlotsByDateRange(int $doctorId, string $fromDate, string $toDate)
     {
-        if ($status === null) {
-            return $this->model->count();
-        }
+        return Appointment::where('doctor_id', $doctorId)
+            ->whereBetween('appointment_date', [$fromDate, $toDate])
+            ->where('status', '!=', 'cancelled')
+            ->get(['appointment_date', 'start_time']);
+    }
 
-        return $this->model->where('status', $status)->count();
+    #[Override]
+    public function dayWiseListByDr(Carbon $date, int $doctorId)
+    {
+        return Appointment::where('doctor_id', $doctorId)
+            ->whereDate('appointment_date', $date->format('Y-m-d'))
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
+
+    #[Override]
+    public function dateRangeListByDr(Carbon $fromDate, Carbon $toDate, int $doctorId)
+    {
+        return Appointment::where('doctor_id', $doctorId)
+            ->whereBetween('appointment_date', [$fromDate->format('Y-m-d'), $toDate->format('Y-m-d')])
+            ->orderBy('appointment_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->get();
+    }
+
+    #[Override]
+    public function pendingList($filters = [])
+    {
+        return Appointment::where('status', 'pending')
+            ->when(isset($filters['doctor_id']), function($query) use ($filters) {
+                return $query->where('doctor_id', $filters['doctor_id']);
+            })
+            ->when(isset($filters['date']), function($query) use ($filters) {
+                return $query->whereDate('appointment_date', $filters['date']);
+            })
+            ->orderBy('appointment_date', 'asc')
+            ->get();
+    }
+
+    #[Override]
+    public function canclledList($filters = [])
+    {
+        return Appointment::where('status', 'cancelled')
+            ->when(isset($filters['doctor_id']), function($query) use ($filters) {
+                return $query->where('doctor_id', $filters['doctor_id']);
+            })
+            ->orderBy('appointment_date', 'desc')
+            ->get();
+    }
+
+    #[Override]
+    public function confirmedList($filters = [])
+    {
+        return Appointment::where('status', 'confirmed')
+            ->when(isset($filters['doctor_id']), function($query) use ($filters) {
+                return $query->where('doctor_id', $filters['doctor_id']);
+            })
+            ->orderBy('appointment_date', 'asc')
+            ->get();
     }
 }

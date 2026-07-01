@@ -37,7 +37,8 @@ class DoctorRepository implements DoctorRepositoryInterface
     #[Override]
     public function findBySlug(string $slug): Doctor
     {
-        return Doctor::where('slug', $slug)->first();
+        return Doctor::with(['media', 'department'])
+                    ->where('slug', $slug)->first();
 
     }
 

@@ -19,7 +19,9 @@ class FrontDoctorController extends Controller
         ]);
     }
 
-    public function profile(){
-
+    public function profile($slug){
+        return Inertia::render('FRONTEND::Doctors/Details', [
+            'doctor' => $this->doctorRepo->findBySlug($slug)
+        ]);
     }
 }

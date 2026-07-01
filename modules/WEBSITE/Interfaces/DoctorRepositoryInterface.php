@@ -15,5 +15,6 @@ interface DoctorRepositoryInterface{
     public function allActive();
     public function allHomePageDoctor();
 
+
     
 }

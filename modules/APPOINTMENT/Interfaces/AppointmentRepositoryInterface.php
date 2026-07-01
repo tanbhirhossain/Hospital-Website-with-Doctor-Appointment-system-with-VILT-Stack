@@ -1,22 +1,34 @@
-<?php
+<?php 
 
 namespace Modules\APPOINTMENT\Interfaces;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Carbon\Carbon;
 use Modules\APPOINTMENT\Models\Appointment;
 
-interface AppointmentRepositoryInterface
-{
-    public function create(array $data);
-    public function update(Appointment $appointment, array $data);
+interface AppointmentRepositoryInterface{
+    public function create(array $data):Appointment;
+    public function update(Appointment $appointment, array $data):Appointment;
     public function delete(Appointment $appointment): void;
-    public function findById(int $id): ?Appointment;
-    public function all(): Collection;
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
-    public function getBookedSlots(int $doctorId, string $date): Collection;
-    // public function isSlotBooked(int $doctorId, string $date, string $startTime, string $endTime): bool;
-    public function isSlotBooked(int $doctorId, string $date, string $startTime, string $endTime, ?int $ignoreAppointmentId = null):bool;
 
-    public function countByStatus(?string $status = null): int;
+    public function changeStaus(Appointment $appointment, string $status);
+    public function confirmBooking(Appointment $appointment);
+    public function cancelBooking(Appointment $appointment);
+
+    public function findById(int $id);
+    public function findByDoctor(int $doctorId);
+    public function findByPatient(int $phone);
+
+    public function checkTimeSlotAvailability(int $doctorId, string $date, string $startTime);
+    public function getBookedSlotsByDateRange(int $doctorId, string $fromDate, string $toDate);
+    
+    public function dayWiseListByDr(Carbon $date, int $doctorId);
+    public function dateRangeListByDr(Carbon $fromDate, Carbon $toDate, int $doctorId);
+
+    public function pendingList($filters = []);
+    public function canclledList($filters = []);
+    public function confirmedList($filters = []);
+
+
+    
+
 }

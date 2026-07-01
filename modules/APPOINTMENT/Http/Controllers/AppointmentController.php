@@ -3,16 +3,19 @@
 namespace Modules\APPOINTMENT\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Exception;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\APPOINTMENT\Http\Requests\StoreAppointmentRequest;
 use Modules\APPOINTMENT\Http\Requests\UpdateAppointmentRequest;
-use Modules\APPOINTMENT\Interfaces\AppointmentServiceInterface;
+use Modules\APPOINTMENT\Interfaces\AppointmentRepositoryInterface;
+use Modules\APPOINTMENT\Services\AppointmentService;
 use Modules\WEBSITE\Interfaces\DoctorRepositoryInterface;
+use Modules\WEBSITE\Models\Doctor;
 
 class AppointmentController extends Controller
 {
-
     private const STATUSES = [
         'pending'   => 'Pending',
         'confirmed' => 'Confirmed',
@@ -22,28 +25,34 @@ class AppointmentController extends Controller
     ];
 
     public function __construct(
-        private readonly AppointmentServiceInterface $appointmentService,
-        private readonly DoctorRepositoryInterface   $doctorRepository,
+        private readonly AppointmentService             $appointmentService,
+        private readonly AppointmentRepositoryInterface $appointmentRepo,
+        private readonly DoctorRepositoryInterface      $doctorRepository,
     ) {}
-
 
     public function index(): Response
     {
         $filters = request()->only(['status', 'doctor_id', 'date', 'date_from', 'date_to', 'search']);
-        $perPage = (int) request('per_page', 15);
+        
+        // আমাদের রেপোজিটরির ফিল্টার মেথড অনুযায়ী পেন্ডিং, কনফার্মড বা ক্যানসেলড লিস্ট লোড করা
+        $status = request('status', 'pending');
+        if ($status === 'confirmed') {
+            $appointments = $this->appointmentRepo->confirmedList($filters);
+        } elseif ($status === 'cancelled') {
+            $appointments = $this->appointmentRepo->canclledList($filters);
+        } else {
+            $appointments = $this->appointmentRepo->pendingList($filters);
+        }
 
-        $appointments = $this->appointmentService->listAppointments($perPage, $filters);
-        $doctors      = $this->doctorRepository->all();
+    $doctors = Doctor::with(['timetables' => fn ($q) => $q->where('is_active', true)])->get();
 
-        return Inertia::render('APPOINTMENT::Appointments/Index', [
-            'appointments' => $appointments,
-            'doctors'      => $doctors,
-            'statuses'     => self::STATUSES,
-            'filters'      => $filters,
-        ]);
-
+    return Inertia::render('APPOINTMENT::Appointments/Index', [
+        'appointments' => $appointments,
+        'doctors'      => $doctors,
+        'statuses'     => self::STATUSES,
+        'filters'      => $filters,
+    ]);
     }
-
 
     public function create(): Response
     {
@@ -53,89 +62,82 @@ class AppointmentController extends Controller
         ]);
     }
 
-
     public function store(StoreAppointmentRequest $request)
     {
         try {
             $this->appointmentService->createAppointment($request->validated());
             return redirect()->route('appointments.index')->with('success', 'Appointment booked successfully.');
-        } catch (\InvalidArgumentException $e) {
-            return redirect()->back()->withInput()>with('error', $e->getMessage());
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
 
-
     public function show(int $id): Response
     {
-        $appointment = $this->appointmentService->getAppointment($id);
+        $appointment = $this->appointmentRepo->findById($id);
+
+        if (!$appointment) {
+            abort(404, 'Appointment not found');
+        }
 
         return Inertia::render('APPOINTMENT::Appointments/Show', [
-            'appointment' => $appointment->load('doctor'),
+            'appointment' => $appointment->load('doctor'), // রিলেশন লোড
             'statuses'    => self::STATUSES,
         ]);
     }
 
-
     public function edit(int $id): Response
     {
+        $appointment = $this->appointmentRepo->findById($id);
+
+        if (!$appointment) {
+            abort(404, 'Appointment not found');
+        }
+
         return Inertia::render('APPOINTMENT::Appointments/Edit', [
-            'appointment' => $this->appointmentService->getAppointment($id),
+            'appointment' => $appointment,
             'doctors'     => $this->doctorRepository->all(),
             'statuses'    => self::STATUSES,
         ]);
     }
 
-
     public function update(UpdateAppointmentRequest $request, int $id)
     {
         try {
-            $appointment = $this->appointmentService->getAppointment($id);
-            $this->appointmentService->updateAppointment($appointment, $request->validated());
+            $this->appointmentService->updateAppointment($id, $request->validated());
             return redirect()->route('appointments.index')->with('success', 'Appointment updated successfully.');
-        } catch (\InvalidArgumentException $e) {
+        } catch (Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
 
-
     public function destroy(int $id)
     {
-        $appointment = $this->appointmentService->getAppointment($id);
-        $this->appointmentService->deleteAppointment($appointment);
-        return redirect() ->route('appointments.index')->with('success', 'Appointment deleted successfully.');
+        try {
+            $this->appointmentService->deleteAppointment($id);
+            return redirect()->route('appointments.index')->with('success', 'Appointment deleted successfully.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
-
-public function confirm(int $id)
-{
-    request()->validate([
-        'serial_number' => ['nullable', 'integer', 'min:1'],
-    ]);
-
-    try {
-        $appointment = $this->appointmentService->getAppointment($id);
-
-        $this->appointmentService->confirmAppointment(
-            $appointment,
-            request()->filled('serial_number') ? (int) request('serial_number') : null
-        );
-
-        return redirect()->back()->with('success', 'Appointment confirmed.');
-    } catch (\InvalidArgumentException $e) {
-        return redirect()->back()->with('error', $e->getMessage());
-    }
-}
-
-    public function cancel(int $id)
+    public function confirm(int $id)
     {
         try {
-            $this->appointmentService->cancelAppointment(
-                $this->appointmentService->getAppointment($id),
-                request('cancellation_reason'),
-            );
+            $this->appointmentService->confirmBooking($id);
+            return redirect()->back()->with('success', 'Appointment confirmed.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
 
+    public function cancel(Request $request, int $id)
+    {
+        try {
+            $reason = $request->input('cancellation_reason');
+            $this->appointmentService->cancelBooking($id, $reason);
             return redirect()->back()->with('success', 'Appointment cancelled.');
-        } catch (\InvalidArgumentException $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -143,27 +145,38 @@ public function confirm(int $id)
     public function complete(int $id)
     {
         try {
-            $this->appointmentService->completeAppointment(
-                $this->appointmentService->getAppointment($id)
-            );
-
+            $this->appointmentService->changeStatus($id, 'completed');
             return redirect()->back()->with('success', 'Appointment completed.');
-        } catch (\InvalidArgumentException $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
-
     public function noShow(int $id)
     {
         try {
-            $this->appointmentService->markNoShow(
-                $this->appointmentService->getAppointment($id)
-            );
-
+            $this->appointmentService->changeStatus($id, 'no_show');
             return redirect()->back()->with('success', 'Marked as no-show.');
-        } catch (\InvalidArgumentException $e) {
+        } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    public function getAvailableSlots(Request $request)
+    {
+        $request->validate([
+            'doctor_id' => 'required|exists:doctors,id',
+            'date' => 'required|date',
+        ]);
+
+        // You already have the service logic! Use it here.
+        // Note: You need to inject TimeSlotService into the controller
+        $slots = $this->timeSlotService->getTimeSlotDateWise(
+            $request->doctor_id, 
+            $request->date, 
+            $request->date
+        );
+
+        return response()->json($slots[$request->date] ?? []);
     }
 }

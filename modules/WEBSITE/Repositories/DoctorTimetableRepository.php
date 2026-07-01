@@ -2,6 +2,7 @@
 
 namespace Modules\WEBSITE\Repositories;
 
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 use Modules\WEBSITE\Interfaces\DoctorTimetableRepositoryInterface;
 use Modules\WEBSITE\Models\DoctorTimetable;
@@ -34,8 +35,22 @@ class DoctorTimetableRepository implements DoctorTimetableRepositoryInterface{
     }
 
     #[Override]
+    public function findByDayAndDrId(int $day, int $dr_id)
+    {
+        return DoctorTimetable::where('day_of_week', $day)->where('doctor_id', $dr_id)->get();
+    }
+
+    #[Override]
     public function all()
     {
         return DoctorTimetable::all();
     }
+
+    public function getDoctorAvilabilityDateByRange(int $doctorId, string $startDate, string $endDate){
+        $period = CarbonPeriod::create($startDate, $endDate);
+        $dates = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($period));
+        return $dates;
+
+    }
+
 }

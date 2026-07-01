@@ -2,17 +2,14 @@
 import { computed, ref, watch } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Plus,Search,CalendarDays,Clock,Pencil,Trash2,X,User,Mail,Phone,Stethoscope,Timer, ChevronLeft, ChevronRight, Loader2, Check, Sparkles,} from 'lucide-vue-next'
+import {
+    Plus, Search, CalendarDays, Clock, Pencil, Trash2, X, User, Mail, Phone,
+    Stethoscope, Timer, ChevronLeft, ChevronRight, Loader2, Check, Sparkles,
+} from 'lucide-vue-next'
 
 const props = defineProps({
-    appointments: {
-        type: Object,
-        required: true,
-    },
-    doctors: {
-        type: [Array, Object],
-        default: () => [],
-    },
+    appointments: { type: Object, required: true },
+    doctors: { type: [Array, Object], default: () => [] },
     statuses: {
         type: Object,
         default: () => ({
@@ -23,18 +20,21 @@ const props = defineProps({
             no_show: 'No Show',
         }),
     },
-    filters: {
-        type: Object,
-        default: () => ({}),
-    },
+    filters: { type: Object, default: () => ({}) },
 })
 
+/* ---------------------------------------------------------
+ * Filter state
+ * --------------------------------------------------------- */
 const search = ref(props.filters.search || '')
 const statusFilter = ref(props.filters.status || '')
 const doctorFilter = ref(props.filters.doctor_id || '')
 const dateFilter = ref(props.filters.date || '')
 const perPage = ref(props.appointments?.per_page || 15)
 
+/* ---------------------------------------------------------
+ * Drawer / modal state
+ * --------------------------------------------------------- */
 const drawerOpen = ref(false)
 const isEditing = ref(false)
 const selectedAppointment = ref(null)
@@ -49,7 +49,11 @@ const confirmingAppointment = ref(null)
 const confirmSerialNumber = ref('')
 
 const calendarMonth = ref(new Date())
+const todayISO = new Date().toISOString().split('T')[0]
 
+/* ---------------------------------------------------------
+ * Inertia form
+ * --------------------------------------------------------- */
 const form = useForm({
     doctor_id: '',
     patient_name: '',
@@ -58,11 +62,61 @@ const form = useForm({
     appointment_date: '',
     start_time: '',
     end_time: '',
-    slot_duration: 30,
+    slot_duration: 15,
     status: 'pending',
     notes: '',
 })
 
+/* ---------------------------------------------------------
+ * Helpers
+ * --------------------------------------------------------- */
+const normalizeTime = (timeStr) => {
+    if (!timeStr) return ''
+    const parts = timeStr.split(':')
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : timeStr
+}
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '—'
+    const d = new Date(`${dateStr}T00:00:00`)
+    if (Number.isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const formatTime = (timeStr) => {
+    if (!timeStr) return '—'
+    const [h, m] = timeStr.split(':')
+    const hour = Number(h)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const displayHour = ((hour + 11) % 12) + 1
+    return `${displayHour}:${m} ${period}`
+}
+
+const doctorName = (appointment) => {
+    if (appointment?.doctor?.name) return appointment.doctor.name
+    const match = doctorsList.value.find((d) => Number(d.id) === Number(appointment?.doctor_id))
+    return match?.name || 'Unassigned'
+}
+
+const STATUS_STYLES = {
+    pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+    confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    completed: 'bg-blue-50 text-blue-700 border border-blue-200',
+    cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
+    no_show: 'bg-slate-50 text-slate-600 border border-slate-300',
+}
+
+const statusClass = (status) => STATUS_STYLES[status] || STATUS_STYLES.no_show
+const statusLabel = (status) => props.statuses[status] || status
+
+const visitPage = (url) => {
+    if (!url) return
+    router.get(url, {}, { preserveState: true, preserveScroll: true, replace: true })
+}
+
+/* ---------------------------------------------------------
+ * Computed
+ * --------------------------------------------------------- */
 const rows = computed(() => props.appointments?.data || [])
 
 const doctorsList = computed(() => {
@@ -70,13 +124,12 @@ const doctorsList = computed(() => {
     return Object.values(props.doctors || {})
 })
 
-const selectedDoctor = computed(() => {
-    return doctorsList.value.find((doctor) => Number(doctor.id) === Number(form.doctor_id))
-})
+const selectedDoctor = computed(() =>
+    doctorsList.value.find((doctor) => Number(doctor.id) === Number(form.doctor_id)),
+)
 
 const selectedDoctorWorkingDays = computed(() => {
     const timetables = selectedDoctor.value?.timetables || []
-
     return timetables
         .filter((item) => item.is_active === true || item.is_active === 1 || item.is_active === '1')
         .map((item) => Number(item.day_of_week))
@@ -93,11 +146,56 @@ const pageStats = computed(() => ({
     no_show: rows.value.filter((item) => item.status === 'no_show').length,
 }))
 
-let filterTimeout = null
+const currentMonthLabel = computed(() =>
+    calendarMonth.value.toLocaleDateString('default', { month: 'long', year: 'numeric' }),
+)
 
+// FIX: this previously emitted { date, dayNumber, isCurrentMonth, isSelectable }
+// while the template read { date, label, muted, today, selected, selectable, hasSchedule }.
+// The mismatch meant every calendar cell rendered blank and permanently disabled —
+// which is why no date ever appeared as available after picking a doctor.
+const calendarDays = computed(() => {
+    const year = calendarMonth.value.getFullYear()
+    const month = calendarMonth.value.getMonth()
+
+    const firstDayIndex = new Date(year, month, 1).getDay()
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const days = []
+
+    for (let i = 0; i < firstDayIndex; i++) {
+        days.push({ date: null, label: '', muted: true, selectable: false, today: false, selected: false, hasSchedule: false })
+    }
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+        const dateObj = new Date(year, month, day)
+        const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const dayOfWeek = dateObj.getDay()
+
+        const isWorkingDay = selectedDoctorWorkingDays.value.includes(dayOfWeek)
+        const isPast = formattedDate < todayISO
+        const isSelectable = !isPast && (!hasDoctorSchedule.value || isWorkingDay)
+
+        days.push({
+            date: formattedDate,
+            label: day,
+            muted: false,
+            today: formattedDate === todayISO,
+            selected: formattedDate === form.appointment_date,
+            selectable: isSelectable,
+            hasSchedule: hasDoctorSchedule.value ? isWorkingDay : false,
+        })
+    }
+
+    return days
+})
+
+/* ---------------------------------------------------------
+ * Watchers
+ * --------------------------------------------------------- */
+let filterTimeout = null
 watch([search, statusFilter, doctorFilter, dateFilter, perPage], () => {
     clearTimeout(filterTimeout)
-
     filterTimeout = setTimeout(() => {
         router.get(
             route('appointments.index'),
@@ -108,36 +206,27 @@ watch([search, statusFilter, doctorFilter, dateFilter, perPage], () => {
                 date: dateFilter.value || undefined,
                 per_page: perPage.value || 15,
             },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
+            { preserveState: true, preserveScroll: true, replace: true },
         )
     }, 350)
 })
 
-watch(
-    () => form.doctor_id,
-    () => {
-        resetScheduleSelection()
-    },
-)
+watch(() => form.doctor_id, () => {
+    resetScheduleSelection()
+})
 
-watch(
-    () => form.appointment_date,
-    () => {
-        if (form.doctor_id && form.appointment_date) {
-            fetchAvailableSlots()
-        }
-    },
-)
+watch(() => form.appointment_date, () => {
+    if (form.doctor_id && form.appointment_date) fetchAvailableSlots()
+})
 
+/* ---------------------------------------------------------
+ * Methods
+ * --------------------------------------------------------- */
 const resetScheduleSelection = () => {
     form.appointment_date = ''
     form.start_time = ''
     form.end_time = ''
-    form.slot_duration = 30
+    form.slot_duration = 15
     slots.value = []
     selectedSlotKey.value = ''
     slotMessage.value = ''
@@ -150,8 +239,28 @@ const resetScheduleSelection = () => {
 const clearSlotOnly = () => {
     form.start_time = ''
     form.end_time = ''
-    form.slot_duration = 30
+    form.slot_duration = 15
     selectedSlotKey.value = ''
+}
+
+const selectSlot = (slot) => {
+    if (!slot.available) return
+    form.start_time = slot.start_time
+    form.end_time = slot.end_time
+    selectedSlotKey.value = `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}`
+}
+
+const selectCalendarDate = (day) => {
+    if (!day.date || !day.selectable) return
+    form.appointment_date = day.date
+}
+
+const previousMonth = () => {
+    calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() - 1, 1)
+}
+
+const nextMonth = () => {
+    calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() + 1, 1)
 }
 
 const openCreateDrawer = () => {
@@ -168,7 +277,7 @@ const openCreateDrawer = () => {
     form.appointment_date = ''
     form.start_time = ''
     form.end_time = ''
-    form.slot_duration = 30
+    form.slot_duration = 15
     form.status = 'pending'
     form.notes = ''
 
@@ -190,17 +299,17 @@ const openEditDrawer = async (appointment) => {
     form.patient_name = appointment.patient_name || ''
     form.patient_email = appointment.patient_email || ''
     form.patient_phone = appointment.patient_phone || ''
-    form.appointment_date = appointment.appointment_date || ''
+    form.appointment_date = String(appointment.appointment_date || '').substring(0, 10)
     form.start_time = normalizeTime(appointment.start_time)
     form.end_time = normalizeTime(appointment.end_time)
-    form.slot_duration = appointment.slot_duration || 30
+    form.slot_duration = appointment.slot_duration || 15
     form.status = appointment.status || 'pending'
     form.notes = appointment.notes || ''
 
     selectedSlotKey.value = `${form.start_time}-${form.end_time}`
 
-    if (appointment.appointment_date) {
-        calendarMonth.value = new Date(`${appointment.appointment_date}T00:00:00`)
+    if (form.appointment_date) {
+        calendarMonth.value = new Date(`${form.appointment_date}T00:00:00`)
     }
 
     drawerOpen.value = true
@@ -227,7 +336,6 @@ const submitAppointment = () => {
             preserveScroll: true,
             onSuccess: () => closeDrawer(),
         })
-
         return
     }
 
@@ -239,10 +347,7 @@ const submitAppointment = () => {
 
 const deleteAppointment = (appointment) => {
     if (!confirm(`Delete appointment for ${appointment.patient_name}?`)) return
-
-    router.delete(route('appointments.destroy', appointment.id), {
-        preserveScroll: true,
-    })
+    router.delete(route('appointments.destroy', appointment.id), { preserveScroll: true })
 }
 
 const clearFilters = () => {
@@ -259,241 +364,48 @@ const fetchAvailableSlots = async (keepSelected = false) => {
     loadingSlots.value = true
     slotMessage.value = ''
 
-    if (!keepSelected) {
-        clearSlotOnly()
-    }
+    if (!keepSelected) clearSlotOnly()
 
     try {
-        const url = routeAvailableSlots()
-
+        const baseUrl = route('test-slot')
         const query = new URLSearchParams({
             doctor_id: form.doctor_id,
-            date: form.appointment_date,
+            start_date: form.appointment_date,
+            end_date: form.appointment_date,
         })
 
-        const response = await fetch(`${url}?${query.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-            },
+        const response = await fetch(`${baseUrl}?${query.toString()}`, {
+            headers: { Accept: 'application/json' },
         })
 
         const data = await response.json()
+        const selectedDate = form.appointment_date
 
-        if (data.success) {
-            slots.value = data.slots || []
-
+        if (data && data[selectedDate]) {
+            slots.value = data[selectedDate]
             if (!slots.value.length) {
                 slotMessage.value = 'No slots found for this date. The doctor may be on rest or unavailable.'
             }
-
             return
         }
 
         slots.value = []
-        slotMessage.value = data.message || 'Could not load slots.'
+        slotMessage.value = 'No available slots found for this date.'
     } catch (error) {
         slots.value = []
-        slotMessage.value = 'Unable to fetch time slots. Please check the available-slots route.'
+        slotMessage.value = 'Unable to fetch time slots. Please check your network connection.'
     } finally {
         loadingSlots.value = false
     }
 }
 
-const routeAvailableSlots = () => {
-    try {
-        return route('booking.available-slots')
-    } catch {
-        return '/booking/available-slots'
-    }
-}
-
-const selectCalendarDate = (day) => {
-    if (!day.selectable) return
-
-    form.appointment_date = day.date
-}
-
-const selectSlot = (slot) => {
-    if (!slot.available) return
-
-    form.start_time = normalizeTime(slot.start_time)
-    form.end_time = normalizeTime(slot.end_time)
-    form.slot_duration = calculateDuration(slot.start_time, slot.end_time)
-    selectedSlotKey.value = `${form.start_time}-${form.end_time}`
-    slotMessage.value = ''
-}
-
-const calculateDuration = (start, end) => {
-    const [startHour, startMinute] = normalizeTime(start).split(':').map(Number)
-    const [endHour, endMinute] = normalizeTime(end).split(':').map(Number)
-
-    return endHour * 60 + endMinute - (startHour * 60 + startMinute)
-}
-
-const calendarDays = computed(() => {
-    const year = calendarMonth.value.getFullYear()
-    const month = calendarMonth.value.getMonth()
-
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const startPadding = firstDay.getDay()
-    const days = []
-
-    for (let i = 0; i < startPadding; i++) {
-        days.push({
-            label: '',
-            date: '',
-            muted: true,
-            selectable: false,
-        })
-    }
-
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const date = new Date(year, month, day)
-        const dateString = toDateString(date)
-        const dayOfWeek = date.getDay()
-        const isPast = isPastDate(date)
-        const hasSchedule = selectedDoctorWorkingDays.value.includes(dayOfWeek)
-
-        days.push({
-            label: day,
-            date: dateString,
-            dayOfWeek,
-            muted: false,
-            today: dateString === toDateString(new Date()),
-            selected: form.appointment_date === dateString,
-            hasSchedule,
-            selectable: Boolean(form.doctor_id) && hasSchedule && !isPast,
-        })
-    }
-
-    return days
-})
-
-const previousMonth = () => {
-    const date = new Date(calendarMonth.value)
-    date.setMonth(date.getMonth() - 1)
-    calendarMonth.value = date
-}
-
-const nextMonth = () => {
-    const date = new Date(calendarMonth.value)
-    date.setMonth(date.getMonth() + 1)
-    calendarMonth.value = date
-}
-
-const currentMonthLabel = computed(() => {
-    return calendarMonth.value.toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-    })
-})
-
-const toDateString = (date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-
-    return `${year}-${month}-${day}`
-}
-
-const isPastDate = (date) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const target = new Date(date)
-    target.setHours(0, 0, 0, 0)
-
-    return target < today
-}
-
-const normalizeTime = (time) => {
-    if (!time) return ''
-    return String(time).slice(0, 5)
-}
-
-const formatTime = (time) => {
-    const normalized = normalizeTime(time)
-    if (!normalized) return '—'
-
-    const [hour, minute] = normalized.split(':').map(Number)
-    const suffix = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-
-    return `${displayHour}:${String(minute).padStart(2, '0')} ${suffix}`
-}
-
-const formatDate = (date) => {
-    if (!date) return '—'
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    })
-}
-
-const doctorName = (appointment) => {
-    return appointment?.doctor?.name ||
-        doctorsList.value.find((doctor) => Number(doctor.id) === Number(appointment.doctor_id))?.name ||
-        'Unknown Doctor'
-}
-
-const statusLabel = (status) => props.statuses?.[status] || status
-
-const statusClass = (status) => {
-    return {
-        pending: 'status-pending',
-        confirmed: 'status-confirmed',
-        cancelled: 'status-cancelled',
-        completed: 'status-completed',
-        no_show: 'status-no-show',
-    }[status] || 'status-default'
-}
-
-const visitPage = (url) => {
-    if (!url) return
-
-    router.visit(url, {
-        preserveScroll: true,
-        preserveState: true,
-    })
-}
-
+/* ---------------------------------------------------------
+ * Confirm modal
+ * --------------------------------------------------------- */
 const openConfirmModal = (appointment) => {
     confirmingAppointment.value = appointment
-
-    const sameDoctorDateConfirmed = rows.value.filter((item) => {
-        return Number(item.doctor_id) === Number(appointment.doctor_id)
-            && String(item.appointment_date).substring(0, 10) === String(appointment.appointment_date).substring(0, 10)
-            && item.serial_number
-    })
-
-    const maxSerial = sameDoctorDateConfirmed.reduce((max, item) => {
-        return Math.max(max, Number(item.serial_number || 0))
-    }, 0)
-
-    confirmSerialNumber.value = maxSerial + 1
+    confirmSerialNumber.value = appointment.serial_number ?? ''
     confirmModalOpen.value = true
-}
-
-const submitConfirmAppointment = () => {
-    if (!confirmingAppointment.value) return
-
-    router.post(
-        route('appointments.confirm', confirmingAppointment.value.id),
-        {
-            serial_number: confirmSerialNumber.value || null,
-        },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                confirmModalOpen.value = false
-                confirmingAppointment.value = null
-                confirmSerialNumber.value = ''
-            },
-        },
-    )
 }
 
 const closeConfirmModal = () => {
@@ -501,99 +413,129 @@ const closeConfirmModal = () => {
     confirmingAppointment.value = null
     confirmSerialNumber.value = ''
 }
+
+const submitConfirmAppointment = () => {
+    if (!confirmingAppointment.value) return
+
+    router.put(
+        route('appointments.confirm', confirmingAppointment.value.id),
+        { serial_number: confirmSerialNumber.value || null },
+        { preserveScroll: true, onSuccess: () => closeConfirmModal() },
+    )
+}
 </script>
 
 <template>
     <AppLayout>
-        <div class="appointment-page">
-            <div class="appointment-container">
-                <section class="hero-card">
-                    <div class="hero-copy">
-                        <span class="hero-badge">
-                            <Sparkles size="14" />
+        <div class="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+            <div class="mx-auto flex max-w-7xl flex-col gap-6">
+
+                <!-- Hero -->
+                <section class="relative flex flex-col gap-6 overflow-hidden rounded-[36px] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-900 p-9 text-white shadow-[0_28px_90px_rgba(15,23,42,0.26)] sm:flex-row sm:items-center sm:justify-between">
+                    <div class="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-indigo-500/40 blur-[34px]"></div>
+                    <div class="pointer-events-none absolute -bottom-40 left-[30%] h-72 w-72 rounded-full bg-sky-400/15 blur-[32px]"></div>
+
+                    <div class="relative flex flex-col gap-3">
+                        <span class="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 text-[13px] font-extrabold uppercase tracking-wide text-indigo-200">
+                            <Sparkles :size="14" />
                             Appointment Command Center
                         </span>
-
-                        <h1>Premium Appointment Management</h1>
-
-                        <p>
+                        <h1 class="max-w-xl text-[32px] font-black leading-tight tracking-tight sm:text-[42px]">Premium Appointment Management</h1>
+                        <p class="max-w-xl text-[15px] leading-relaxed text-slate-300">
                             Manage patients, doctors, schedules and real-time slot booking from one beautiful dashboard.
                         </p>
                     </div>
 
-                    <button class="primary-btn hero-action" type="button" @click="openCreateDrawer">
-                        <Plus size="18" />
+                    <button
+                        type="button"
+                        class="relative inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-5 py-3.5 text-sm font-extrabold text-slate-950 shadow-[0_18px_45px_rgba(0,0,0,0.2)] transition hover:-translate-y-0.5 hover:bg-indigo-50"
+                        @click="openCreateDrawer"
+                    >
+                        <Plus :size="18" />
                         Create Appointment
                     </button>
                 </section>
 
-                <section class="stats-grid">
-                    <div class="stat-card">
-                        <span>Total</span>
-                        <strong>{{ pageStats.total }}</strong>
-                        <p>All records</p>
+                <!-- Stats -->
+                <section class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Total</span>
+                        <strong class="mt-2 block text-2xl font-bold text-slate-900">{{ pageStats.total }}</strong>
+                        <p class="mt-1 text-xs text-slate-500">All records</p>
                     </div>
 
-                    <div class="stat-card amber">
-                        <span>Pending</span>
-                        <strong>{{ pageStats.pending }}</strong>
-                        <p>This page</p>
+                    <div class="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-amber-600">Pending</span>
+                        <strong class="mt-2 block text-2xl font-bold text-amber-900">{{ pageStats.pending }}</strong>
+                        <p class="mt-1 text-xs text-amber-600/80">This page</p>
                     </div>
 
-                    <div class="stat-card green">
-                        <span>Confirmed</span>
-                        <strong>{{ pageStats.confirmed }}</strong>
-                        <p>This page</p>
+                    <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Confirmed</span>
+                        <strong class="mt-2 block text-2xl font-bold text-emerald-900">{{ pageStats.confirmed }}</strong>
+                        <p class="mt-1 text-xs text-emerald-600/80">This page</p>
                     </div>
 
-                    <div class="stat-card blue">
-                        <span>Completed</span>
-                        <strong>{{ pageStats.completed }}</strong>
-                        <p>This page</p>
+                    <div class="rounded-2xl border border-sky-100 bg-sky-50 p-5 shadow-sm">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-sky-600">Completed</span>
+                        <strong class="mt-2 block text-2xl font-bold text-sky-900">{{ pageStats.completed }}</strong>
+                        <p class="mt-1 text-xs text-sky-600/80">This page</p>
                     </div>
 
-                    <div class="stat-card rose">
-                        <span>Cancelled</span>
-                        <strong>{{ pageStats.cancelled }}</strong>
-                        <p>This page</p>
+                    <div class="rounded-2xl border border-rose-100 bg-rose-50 p-5 shadow-sm">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-rose-600">Cancelled</span>
+                        <strong class="mt-2 block text-2xl font-bold text-rose-900">{{ pageStats.cancelled }}</strong>
+                        <p class="mt-1 text-xs text-rose-600/80">This page</p>
                     </div>
                 </section>
 
-                <section class="panel">
-                    <div class="panel-top">
+                <!-- Panel: filters + table -->
+                <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2>Appointments</h2>
-                            <p>Live search, smart filters, schedule-based booking and server pagination.</p>
+                            <h2 class="text-lg font-semibold text-slate-900">Appointments</h2>
+                            <p class="text-sm text-slate-500">Live search, smart filters, schedule-based booking and server pagination.</p>
                         </div>
 
-                        <button class="clear-btn" type="button" @click="clearFilters">
+                        <button
+                            type="button"
+                            class="mt-3 inline-flex w-fit items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 sm:mt-0"
+                            @click="clearFilters"
+                        >
                             Clear Filters
                         </button>
                     </div>
 
-                    <div class="filters">
-                        <div class="field-icon search-box">
-                            <Search size="17" />
-                            <input v-model="search" type="text" placeholder="Search patient name, phone or email..." />
+                    <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        <div class="relative sm:col-span-2">
+                            <Search :size="17" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                v-model="search"
+                                type="text"
+                                placeholder="Search patient name, phone or email..."
+                                class="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                            />
                         </div>
 
-                        <select v-model="statusFilter">
+                        <select v-model="statusFilter" class="rounded-lg border border-slate-200 py-2.5 px-3 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100">
                             <option value="">All Status</option>
-                            <option v-for="(label, value) in statuses" :key="value" :value="value">
-                                {{ label }}
-                            </option>
+                            <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
                         </select>
 
-                        <select v-model="doctorFilter">
+                        <select v-model="doctorFilter" class="rounded-lg border border-slate-200 py-2.5 px-3 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100">
                             <option value="">All Doctors</option>
-                            <option v-for="doctor in doctorsList" :key="doctor.id" :value="doctor.id">
-                                {{ doctor.name }}
-                            </option>
+                            <option v-for="doctor in doctorsList" :key="doctor.id" :value="doctor.id">{{ doctor.name }}</option>
                         </select>
 
-                        <input v-model="dateFilter" type="date" />
+                        <input
+                            v-model="dateFilter"
+                            type="date"
+                            class="rounded-lg border border-slate-200 py-2.5 px-3 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
 
-                        <select v-model="perPage">
+                    <div class="mt-3 flex justify-end">
+                        <select v-model="perPage" class="rounded-lg border border-slate-200 py-2 px-3 text-sm text-slate-600 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100">
                             <option value="10">10 per page</option>
                             <option value="15">15 per page</option>
                             <option value="25">25 per page</option>
@@ -601,108 +543,112 @@ const closeConfirmModal = () => {
                         </select>
                     </div>
 
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Serial</th>
-                                    <th>Patient</th>
-                                    <th>Doctor</th>
-                                    <th>Schedule</th>
-                                    <th>Duration</th>
-                                    <th>Status</th>
-                                    <th class="text-right">Actions</th>
+                    <!-- Table -->
+                    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+                        <table class="min-w-full divide-y divide-slate-100 text-sm">
+                            <thead class="bg-slate-50">
+                                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    <th class="px-4 py-3">Serial</th>
+                                    <th class="px-4 py-3">Patient</th>
+                                    <th class="px-4 py-3">Doctor</th>
+                                    <th class="px-4 py-3">Schedule</th>
+                                    <th class="px-4 py-3">Duration</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
-                                <tr v-for="appointment in rows" :key="appointment.id">
-                                    <td>
-                                        <div class="serial-cell">
-                                                {{ appointment.serial_number ?? '—' }}
-
-                                        </div>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                <tr v-for="appointment in rows" :key="appointment.id" class="transition hover:bg-slate-50">
+                                    <td class="px-4 py-3 font-medium text-slate-700">
+                                        {{ appointment.serial_number ?? '—' }}
                                     </td>
-                                    <td>
-                                        <div class="patient-cell">
 
-                                            <div class="avatar">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
                                                 {{ appointment.patient_name?.charAt(0) || 'P' }}
                                             </div>
-
-                                            <div>
-                                                <strong>{{ appointment.patient_name }}</strong>
-                                                <span>{{ appointment.patient_email || 'No email' }}</span>
-                                                <small>{{ appointment.patient_phone }}</small>
+                                            <div class="min-w-0">
+                                                <strong class="block truncate text-slate-900">{{ appointment.patient_name }}</strong>
+                                                <span class="block truncate text-xs text-slate-500">{{ appointment.patient_email || 'No email' }}</span>
+                                                <small class="block text-xs text-slate-400">{{ appointment.patient_phone }}</small>
                                             </div>
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <div class="doctor-cell">
-                                            <Stethoscope size="16" />
+                                    <td class="px-4 py-3">
+                                        <div class="inline-flex items-center gap-1.5 text-slate-700">
+                                            <Stethoscope :size="16" class="text-indigo-500" />
                                             {{ doctorName(appointment) }}
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <div class="schedule-cell">
-                                            <span>
-                                                <CalendarDays size="15" />
+                                    <td class="px-4 py-3">
+                                        <div class="flex flex-col gap-1 text-xs text-slate-600">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <CalendarDays :size="14" class="text-slate-400" />
                                                 {{ formatDate(String(appointment.appointment_date).substring(0, 10)) }}
-
-                                                
                                             </span>
-
-                                            <span>
-                                                <Clock size="15" />
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <Clock :size="14" class="text-slate-400" />
                                                 {{ formatTime(appointment.start_time) }} - {{ formatTime(appointment.end_time) }}
                                             </span>
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <span class="duration-pill">
-                                            <Timer size="14" />
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                            <Timer :size="13" />
                                             {{ appointment.slot_duration }} min
                                         </span>
                                     </td>
 
-                                    <td>
-                                        <span class="status-pill" :class="statusClass(appointment.status)">
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="statusClass(appointment.status)">
                                             {{ statusLabel(appointment.status) }}
                                         </span>
                                     </td>
 
-                                    <td>
-                                        <div class="actions">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center justify-end gap-1.5">
                                             <button
                                                 v-if="appointment.status === 'pending'"
                                                 type="button"
-                                                class="success"
                                                 title="Confirm appointment"
+                                                class="rounded-lg p-2 text-emerald-600 transition hover:bg-emerald-50"
                                                 @click="openConfirmModal(appointment)"
                                             >
-                                                <Check size="16" />
+                                                <Check :size="16" />
                                             </button>
 
-                                            <button type="button" @click="openEditDrawer(appointment)">
-                                                <Pencil size="16" />
+                                            <button
+                                                type="button"
+                                                title="Edit"
+                                                class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100"
+                                                @click="openEditDrawer(appointment)"
+                                            >
+                                                <Pencil :size="16" />
                                             </button>
 
-                                            <button type="button" class="danger" @click="deleteAppointment(appointment)">
-                                                <Trash2 size="16" />
+                                            <button
+                                                type="button"
+                                                title="Delete"
+                                                class="rounded-lg p-2 text-rose-500 transition hover:bg-rose-50"
+                                                @click="deleteAppointment(appointment)"
+                                            >
+                                                <Trash2 :size="16" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
 
                                 <tr v-if="rows.length === 0">
-                                    <td colspan="6">
-                                        <div class="empty-state">
-                                            <Search size="30" />
-                                            <h3>No appointments found</h3>
-                                            <p>Try changing your search or filters.</p>
+                                    <td colspan="7" class="px-4 py-16">
+                                        <div class="flex flex-col items-center gap-2 text-center text-slate-400">
+                                            <Search :size="30" />
+                                            <h3 class="text-sm font-semibold text-slate-600">No appointments found</h3>
+                                            <p class="text-xs">Try changing your search or filters.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -710,24 +656,24 @@ const closeConfirmModal = () => {
                         </table>
                     </div>
 
-                    <div class="pagination">
-                        <p>
-                            Showing
-                            <strong>{{ appointments.from || 0 }}</strong>
-                            to
-                            <strong>{{ appointments.to || 0 }}</strong>
-                            of
-                            <strong>{{ appointments.total || 0 }}</strong>
-                            appointments
+                    <!-- Pagination -->
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-xs text-slate-500">
+                            Showing <strong class="text-slate-700">{{ appointments.from || 0 }}</strong>
+                            to <strong class="text-slate-700">{{ appointments.to || 0 }}</strong>
+                            of <strong class="text-slate-700">{{ appointments.total || 0 }}</strong> appointments
                         </p>
 
-                        <div class="pagination-links">
+                        <div class="flex flex-wrap gap-1.5">
                             <button
                                 v-for="link in appointments.links"
                                 :key="link.label"
                                 type="button"
                                 :disabled="!link.url"
-                                :class="{ active: link.active }"
+                                :class="[
+                                    'min-w-[40px] rounded-[13px] px-3 py-2 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-45',
+                                    link.active ? 'border border-slate-900 bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
+                                ]"
                                 v-html="link.label"
                                 @click="visitPage(link.url)"
                             ></button>
@@ -736,281 +682,302 @@ const closeConfirmModal = () => {
                 </section>
             </div>
 
-            <div v-if="drawerOpen" class="drawer-overlay" @click="closeDrawer"></div>
+            <!-- Drawer overlay -->
+            <div
+                v-if="drawerOpen"
+                class="fixed inset-0 z-40 bg-slate-900/[.58] backdrop-blur-[7px] transition-opacity"
+                @click="closeDrawer"
+            ></div>
 
-            <aside :class="['drawer', { open: drawerOpen }]">
-                <div class="drawer-header">
-                    <div>
-                        <span>{{ isEditing ? 'Update Booking' : 'New Booking' }}</span>
-                        <h2>{{ isEditing ? 'Edit Appointment' : 'Create Appointment' }}</h2>
-                        <p>Select doctor, valid schedule date and available time slot.</p>
+            <!-- Drawer -->
+            <aside
+                :class="[
+                    'fixed inset-y-0 right-0 z-50 flex w-full max-w-[620px] flex-col bg-white shadow-[-28px_0_80px_rgba(15,23,42,0.26)] transition-transform duration-300',
+                    drawerOpen ? 'translate-x-0' : 'translate-x-full',
+                ]"
+            >
+                <div class="relative flex items-start justify-between gap-4 overflow-hidden border-b border-slate-200 bg-white px-6 py-6">
+                    <div class="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-indigo-500/10 blur-2xl"></div>
+                    <div class="relative">
+                        <span class="mb-1.5 inline-flex text-xs font-extrabold uppercase tracking-[0.12em] text-indigo-500">
+                            {{ isEditing ? 'Update Booking' : 'New Booking' }}
+                        </span>
+                        <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ isEditing ? 'Edit Appointment' : 'Create Appointment' }}</h2>
+                        <p class="mt-1.5 text-sm text-slate-500">Select doctor, valid schedule date and available time slot.</p>
                     </div>
 
-                    <button type="button" @click="closeDrawer">
-                        <X size="22" />
+                    <button type="button" class="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 transition hover:bg-slate-200" @click="closeDrawer">
+                        <X :size="20" />
                     </button>
                 </div>
 
-                <div class="drawer-body">
-                    <div class="form-section">
-                        <div class="section-title">
-                            <div>
-                                <Stethoscope size="18" />
+                <div class="flex-1 overflow-y-auto bg-slate-50 px-6 py-6">
+                    <!-- Doctor -->
+                    <div class="mb-4 rounded-[24px] border border-slate-200 bg-white p-[18px] shadow-[0_12px_35px_rgba(15,23,42,0.045)]">
+                        <div class="mb-4 flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                <Stethoscope :size="18" />
                             </div>
                             <div>
-                                <h3>Doctor</h3>
-                                <p>Calendar will unlock based on doctor schedule.</p>
+                                <h3 class="text-[15px] font-extrabold text-slate-900">Doctor</h3>
+                                <p class="mt-0.5 text-[13px] text-slate-500">Calendar will unlock based on doctor schedule.</p>
                             </div>
                         </div>
 
-                        <select v-model="form.doctor_id" :class="{ invalid: form.errors.doctor_id }">
+                        <select
+                            v-model="form.doctor_id"
+                            :class="[
+                                'h-12 w-full rounded-2xl border bg-slate-50 px-4 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4',
+                                form.errors.doctor_id ? 'border-rose-400 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 focus:ring-indigo-100',
+                            ]"
+                        >
                             <option value="">Select doctor</option>
-                            <option v-for="doctor in doctorsList" :key="doctor.id" :value="doctor.id">
-                                {{ doctor.name }}
-                            </option>
+                            <option v-for="doctor in doctorsList" :key="doctor.id" :value="doctor.id">{{ doctor.name }}</option>
                         </select>
 
-                        <p v-if="form.errors.doctor_id" class="error-text">
-                            {{ form.errors.doctor_id }}
-                        </p>
+                        <p v-if="form.errors.doctor_id" class="mt-1.5 text-xs font-bold text-rose-600">{{ form.errors.doctor_id }}</p>
 
-                        <div v-if="form.doctor_id && !hasDoctorSchedule" class="warning-box">
+                        <div v-if="form.doctor_id && !hasDoctorSchedule" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-700">
                             This doctor has no active timetable. Calendar dates are disabled.
                         </div>
                     </div>
 
-                    <div class="form-section">
-                        <div class="section-title">
-                            <div>
-                                <CalendarDays size="18" />
+                    <!-- Calendar -->
+                    <div class="mb-4 rounded-[24px] border border-slate-200 bg-white p-[18px] shadow-[0_12px_35px_rgba(15,23,42,0.045)]">
+                        <div class="mb-4 flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                <CalendarDays :size="18" />
                             </div>
                             <div>
-                                <h3>Schedule Date</h3>
-                                <p>Only working schedule dates are selectable.</p>
+                                <h3 class="text-[15px] font-extrabold text-slate-900">Schedule Date</h3>
+                                <p class="mt-0.5 text-[13px] text-slate-500">Only working schedule dates are selectable.</p>
                             </div>
                         </div>
 
-                        <div class="calendar-card">
-                            <div class="calendar-head">
-                                <button type="button" @click="previousMonth">
-                                    <ChevronLeft size="18" />
+                        <div class="rounded-[22px] border border-slate-200 bg-slate-50 p-3.5">
+                            <div class="mb-3.5 flex items-center justify-between">
+                                <button type="button" class="flex h-[38px] w-[38px] items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100" @click="previousMonth">
+                                    <ChevronLeft :size="18" />
                                 </button>
 
-                                <strong>{{ currentMonthLabel }}</strong>
+                                <strong class="text-[15px] font-extrabold text-slate-900">{{ currentMonthLabel }}</strong>
 
-                                <button type="button" @click="nextMonth">
-                                    <ChevronRight size="18" />
+                                <button type="button" class="flex h-[38px] w-[38px] items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100" @click="nextMonth">
+                                    <ChevronRight :size="18" />
                                 </button>
                             </div>
 
-                            <div class="weekdays">
-                                <span>Sun</span>
-                                <span>Mon</span>
-                                <span>Tue</span>
-                                <span>Wed</span>
-                                <span>Thu</span>
-                                <span>Fri</span>
-                                <span>Sat</span>
+                            <div class="mb-2 grid grid-cols-7 text-center text-[11px] font-extrabold uppercase text-slate-400">
+                                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                             </div>
 
-                            <div class="calendar-grid">
+                            <div class="grid grid-cols-7 gap-2">
                                 <button
                                     v-for="(day, index) in calendarDays"
                                     :key="index"
                                     type="button"
                                     :disabled="!day.selectable"
                                     :class="[
-                                        'calendar-day',
-                                        {
-                                            muted: day.muted,
-                                            today: day.today,
-                                            selected: day.selected,
-                                            disabled: !day.selectable && !day.muted,
-                                            scheduled: day.hasSchedule && !day.muted,
-                                        },
+                                        'h-11 rounded-[14px] border text-sm font-extrabold transition',
+                                        day.muted ? 'invisible border-transparent' : '',
+                                        day.selected
+                                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-[0_12px_30px_rgba(79,70,229,0.26)]'
+                                            : day.selectable
+                                                ? day.hasSchedule
+                                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400'
+                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300'
+                                                : 'cursor-not-allowed border-transparent bg-slate-100 text-slate-300 opacity-75',
+                                        day.today && !day.selected ? 'shadow-[inset_0_0_0_2px_#38bdf8]' : '',
                                     ]"
                                     @click="selectCalendarDate(day)"
                                 >
-                                    <span>{{ day.label }}</span>
+                                    {{ day.label }}
                                 </button>
                             </div>
 
-                            <div class="calendar-legend">
-                                <span><i class="legend-dot scheduled"></i> Scheduled</span>
-                                <span><i class="legend-dot disabled"></i> Not available</span>
-                                <span><i class="legend-dot selected"></i> Selected</span>
+                            <div class="mt-3.5 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
+                                <span class="inline-flex items-center gap-1.5"><i class="h-[9px] w-[9px] rounded-full bg-indigo-500"></i> Scheduled</span>
+                                <span class="inline-flex items-center gap-1.5"><i class="h-[9px] w-[9px] rounded-full bg-slate-300"></i> Not available</span>
+                                <span class="inline-flex items-center gap-1.5"><i class="h-[9px] w-[9px] rounded-full bg-indigo-600"></i> Selected</span>
                             </div>
                         </div>
 
-                        <p v-if="form.errors.appointment_date" class="error-text">
-                            {{ form.errors.appointment_date }}
-                        </p>
+                        <p v-if="form.errors.appointment_date" class="mt-1.5 text-xs font-bold text-rose-600">{{ form.errors.appointment_date }}</p>
                     </div>
 
-                    <div class="form-section">
-                        <div class="section-title">
-                            <div>
-                                <Clock size="18" />
+                    <!-- Slots -->
+                    <div class="mb-4 rounded-[24px] border border-slate-200 bg-white p-[18px] shadow-[0_12px_35px_rgba(15,23,42,0.045)]">
+                        <div class="mb-4 flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                <Clock :size="18" />
                             </div>
                             <div>
-                                <h3>Available Time Slots</h3>
-                                <p>Generated from doctor timetable, rest days and booked appointments.</p>
+                                <h3 class="text-[15px] font-extrabold text-slate-900">Available Time Slots</h3>
+                                <p class="mt-0.5 text-[13px] text-slate-500">Generated from doctor timetable, rest days and booked appointments.</p>
                             </div>
                         </div>
 
-                        <div v-if="!form.doctor_id" class="soft-box">
+                        <div v-if="!form.doctor_id" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-500">
                             Select a doctor first.
                         </div>
 
-                        <div v-else-if="!form.appointment_date" class="soft-box">
+                        <div v-else-if="!form.appointment_date" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-500">
                             Select a schedule date from the calendar.
                         </div>
 
-                        <div v-else-if="loadingSlots" class="loading-box">
-                            <Loader2 size="18" class="spin" />
+                        <div v-else-if="loadingSlots" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-500">
+                            <Loader2 :size="18" class="animate-spin" />
                             Loading available slots...
                         </div>
 
                         <div v-else>
-                            <div v-if="slots.length" class="slots-grid">
+                            <div v-if="slots.length" class="grid grid-cols-3 gap-2.5">
                                 <button
                                     v-for="slot in slots"
                                     :key="`${slot.start_time}-${slot.end_time}`"
                                     type="button"
                                     :disabled="!slot.available"
                                     :class="[
-                                        'slot-btn',
-                                        {
-                                            selected: selectedSlotKey === `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}`,
-                                            unavailable: !slot.available,
-                                        },
+                                        'relative grid min-h-[72px] place-items-center gap-0.5 rounded-[18px] border transition',
+                                        selectedSlotKey === `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}`
+                                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-[0_16px_36px_rgba(79,70,229,0.24)]'
+                                            : slot.available
+                                                ? 'border-emerald-200 bg-white text-emerald-700 hover:-translate-y-0.5 hover:border-emerald-500 hover:shadow-[0_12px_30px_rgba(16,185,129,0.12)]'
+                                                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-300',
                                     ]"
                                     @click="selectSlot(slot)"
                                 >
-                                    <strong>{{ formatTime(slot.start_time) }}</strong>
-                                    <span>{{ formatTime(slot.end_time) }}</span>
-                                    <Check v-if="selectedSlotKey === `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}`" size="15" />
+                                    <Check
+                                        v-if="selectedSlotKey === `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}`"
+                                        :size="14"
+                                        class="absolute right-2 top-2"
+                                    />
+                                    <strong class="text-[13px] font-extrabold">{{ formatTime(slot.start_time) }}</strong>
+                                    <span :class="['text-[11px] font-bold', selectedSlotKey === `${normalizeTime(slot.start_time)}-${normalizeTime(slot.end_time)}` ? 'text-indigo-200' : 'text-slate-400']">
+                                        {{ formatTime(slot.end_time) }}
+                                    </span>
                                 </button>
                             </div>
 
-                            <div v-else class="soft-box">
+                            <div v-else class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-500">
                                 {{ slotMessage || 'No slots loaded.' }}
                             </div>
                         </div>
 
-                        <p v-if="slotMessage" class="hint-text">
-                            {{ slotMessage }}
-                        </p>
-
-                        <p v-if="form.errors.start_time || form.errors.end_time" class="error-text">
+                        <p v-if="slotMessage && slots.length" class="mt-2.5 text-[13px] font-semibold text-slate-500">{{ slotMessage }}</p>
+                        <p v-if="form.errors.start_time || form.errors.end_time" class="mt-2.5 text-xs font-bold text-rose-600">
                             {{ form.errors.start_time || form.errors.end_time }}
                         </p>
                     </div>
 
-                    <div class="form-section">
-                        <div class="section-title">
-                            <div>
-                                <User size="18" />
+                    <!-- Patient details -->
+                    <div class="mb-4 rounded-[24px] border border-slate-200 bg-white p-[18px] shadow-[0_12px_35px_rgba(15,23,42,0.045)]">
+                        <div class="mb-4 flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                                <User :size="18" />
                             </div>
                             <div>
-                                <h3>Patient Details</h3>
-                                <p>Basic patient information for appointment record.</p>
+                                <h3 class="text-[15px] font-extrabold text-slate-900">Patient Details</h3>
+                                <p class="mt-0.5 text-[13px] text-slate-500">Basic patient information for appointment record.</p>
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Patient Name *</label>
-                                <div class="field-icon">
-                                    <User size="16" />
+                        <div class="grid grid-cols-2 gap-3.5">
+                            <div>
+                                <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Patient Name *</label>
+                                <div class="relative">
+                                    <User :size="16" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                                     <input
                                         v-model="form.patient_name"
                                         type="text"
                                         placeholder="Enter patient name"
-                                        :class="{ invalid: form.errors.patient_name }"
+                                        :class="[
+                                            'h-12 w-full rounded-2xl border bg-slate-50 pl-[46px] pr-4 text-sm text-slate-900 transition focus:bg-white focus:outline-none focus:ring-4',
+                                            form.errors.patient_name ? 'border-rose-400 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100',
+                                        ]"
                                     />
                                 </div>
-                                <p v-if="form.errors.patient_name" class="error-text">
-                                    {{ form.errors.patient_name }}
-                                </p>
+                                <p v-if="form.errors.patient_name" class="mt-1.5 text-xs font-bold text-rose-600">{{ form.errors.patient_name }}</p>
                             </div>
 
-                            <div class="form-group">
-                                <label>Phone *</label>
-                                <div class="field-icon">
-                                    <Phone size="16" />
+                            <div>
+                                <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Phone *</label>
+                                <div class="relative">
+                                    <Phone :size="16" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                                     <input
                                         v-model="form.patient_phone"
                                         type="text"
                                         placeholder="Enter phone number"
-                                        :class="{ invalid: form.errors.patient_phone }"
+                                        :class="[
+                                            'h-12 w-full rounded-2xl border bg-slate-50 pl-[46px] pr-4 text-sm text-slate-900 transition focus:bg-white focus:outline-none focus:ring-4',
+                                            form.errors.patient_phone ? 'border-rose-400 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100',
+                                        ]"
                                     />
                                 </div>
-                                <p v-if="form.errors.patient_phone" class="error-text">
-                                    {{ form.errors.patient_phone }}
-                                </p>
+                                <p v-if="form.errors.patient_phone" class="mt-1.5 text-xs font-bold text-rose-600">{{ form.errors.patient_phone }}</p>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Email</label>
-                            <div class="field-icon">
-                                <Mail size="16" />
+                        <div class="mt-4">
+                            <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Email</label>
+                            <div class="relative">
+                                <Mail :size="16" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
                                     v-model="form.patient_email"
                                     type="email"
                                     placeholder="Enter email address"
-                                    :class="{ invalid: form.errors.patient_email }"
+                                    :class="[
+                                        'h-12 w-full rounded-2xl border bg-slate-50 pl-[46px] pr-4 text-sm text-slate-900 transition focus:bg-white focus:outline-none focus:ring-4',
+                                        form.errors.patient_email ? 'border-rose-400 bg-rose-50 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100',
+                                    ]"
                                 />
                             </div>
-                            <p v-if="form.errors.patient_email" class="error-text">
-                                {{ form.errors.patient_email }}
-                            </p>
+                            <p v-if="form.errors.patient_email" class="mt-1.5 text-xs font-bold text-rose-600">{{ form.errors.patient_email }}</p>
                         </div>
 
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select v-model="form.status">
-                                <option v-for="(label, value) in statuses" :key="value" :value="value">
-                                    {{ label }}
-                                </option>
+                        <div class="mt-4">
+                            <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Status</label>
+                            <select v-model="form.status" class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100">
+                                <option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option>
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label>Notes</label>
+                        <div class="mt-4">
+                            <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Notes</label>
                             <textarea
                                 v-model="form.notes"
                                 rows="4"
                                 placeholder="Write appointment note..."
+                                class="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100"
                             ></textarea>
                         </div>
                     </div>
 
-                    <div v-if="form.doctor_id && form.appointment_date && form.start_time" class="summary-card">
-                        <span>Booking Summary</span>
-                        <div>
-                            <strong>{{ selectedDoctor?.name }}</strong>
-                            <p>
-                                {{ formatDate(form.appointment_date) }}
-                                ·
-                                {{ formatTime(form.start_time) }} - {{ formatTime(form.end_time) }}
-                                ·
-                                {{ form.slot_duration }} min
+                    <!-- Summary -->
+                    <div v-if="form.doctor_id && form.appointment_date && form.start_time" class="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-indigo-50 to-sky-50 p-4">
+                        <span class="rounded-full bg-white px-3 py-2 text-[11px] font-black uppercase tracking-wide text-indigo-700">Booking Summary</span>
+                        <div class="text-right">
+                            <strong class="block text-[15px] font-black text-slate-900">{{ selectedDoctor?.name }}</strong>
+                            <p class="mt-1 text-[13px] font-bold text-slate-600">
+                                {{ formatDate(form.appointment_date) }} · {{ formatTime(form.start_time) }} - {{ formatTime(form.end_time) }} · {{ form.slot_duration }} min
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="drawer-footer">
-                    <button class="secondary-btn" type="button" @click="closeDrawer">
+                <div class="grid grid-cols-2 gap-3 border-t border-slate-200 bg-white px-6 py-5">
+                    <button
+                        type="button"
+                        class="rounded-2xl border border-slate-200 py-3.5 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50"
+                        @click="closeDrawer"
+                    >
                         Cancel
                     </button>
 
                     <button
-                        class="primary-btn submit-btn"
                         type="button"
                         :disabled="form.processing"
+                        class="rounded-2xl bg-slate-900 py-3.5 text-sm font-extrabold text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-65"
                         @click="submitAppointment"
                     >
                         {{ form.processing ? 'Saving...' : isEditing ? 'Update Appointment' : 'Save Appointment' }}
@@ -1018,50 +985,53 @@ const closeConfirmModal = () => {
                 </div>
             </aside>
 
-            <div v-if="confirmModalOpen" class="modal-backdrop">
-                <div class="confirm-modal">
-                    <div class="modal-header">
+            <!-- Confirm modal -->
+            <div v-if="confirmModalOpen" class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/45 p-5">
+                <div class="w-full max-w-[460px] rounded-[18px] bg-white p-[22px] shadow-[0_24px_80px_rgba(15,23,42,0.25)]">
+                    <div class="mb-[18px] flex items-start justify-between gap-4">
                         <div>
-                            <h3>Confirm Appointment</h3>
-                            <p>
-                                Assign auto or manual serial before confirming.
-                            </p>
+                            <h3 class="text-xl font-bold text-slate-900">Confirm Appointment</h3>
+                            <p class="mt-[5px] text-[13px] text-slate-500">Assign auto or manual serial before confirming.</p>
                         </div>
-
-                        <button type="button" @click="closeConfirmModal">
-                            <X size="18" />
+                        <button type="button" class="rounded-[10px] bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200" @click="closeConfirmModal">
+                            <X :size="18" />
                         </button>
                     </div>
 
-                    <div v-if="confirmingAppointment" class="confirm-summary">
-                        <strong>{{ confirmingAppointment.patient_name }}</strong>
-                        <span>{{ doctorName(confirmingAppointment) }}</span>
-                        <span>
-                            {{ formatDate(String(confirmingAppointment.appointment_date).substring(0, 10)) }}
-                            —
-                            {{ formatTime(confirmingAppointment.start_time) }}
+                    <div v-if="confirmingAppointment" class="mb-4 flex flex-col gap-1 rounded-[14px] border border-slate-200 bg-slate-50 p-3.5">
+                        <strong class="text-[15px] text-slate-900">{{ confirmingAppointment.patient_name }}</strong>
+                        <span class="text-[13px] text-slate-500">{{ doctorName(confirmingAppointment) }}</span>
+                        <span class="text-[13px] text-slate-500">
+                            {{ formatDate(String(confirmingAppointment.appointment_date).substring(0, 10)) }} — {{ formatTime(confirmingAppointment.start_time) }}
                         </span>
                     </div>
 
-                    <div class="form-group">
-                        <label>Serial Number</label>
+                    <div class="mb-5">
+                        <label class="mb-2 block text-[13px] font-extrabold text-slate-700">Serial Number</label>
                         <input
                             v-model="confirmSerialNumber"
                             type="number"
                             min="1"
                             placeholder="Leave as suggested or change manually"
+                            class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100"
                         />
-                        <p class="help-text">
-                            Suggested serial is auto-generated. You can change it before confirming.
-                        </p>
+                        <p class="mt-1.5 text-xs text-slate-500">Suggested serial is auto-generated. You can change it before confirming.</p>
                     </div>
 
-                    <div class="modal-actions">
-                        <button type="button" class="btn-secondary" @click="closeConfirmModal">
+                    <div class="flex justify-end gap-2.5">
+                        <button
+                            type="button"
+                            class="rounded-[10px] bg-slate-100 px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                            @click="closeConfirmModal"
+                        >
                             Cancel
                         </button>
 
-                        <button type="button" class="btn-primary" @click="submitConfirmAppointment">
+                        <button
+                            type="button"
+                            class="rounded-[10px] bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                            @click="submitConfirmAppointment"
+                        >
                             Confirm Appointment
                         </button>
                     </div>
@@ -1070,1159 +1040,3 @@ const closeConfirmModal = () => {
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-* {
-    box-sizing: border-box;
-}
-
-.serial-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.serial-cell strong {
-    font-size: 13px;
-    color: #111827;
-}
-
-.serial-cell small {
-    font-size: 11px;
-    color: #6b7280;
-    text-transform: capitalize;
-}
-
-.actions button.success {
-    color: #047857;
-    background: #ecfdf5;
-}
-
-.actions button.success:hover {
-    background: #d1fae5;
-}
-
-.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
-    background: rgba(15, 23, 42, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.confirm-modal {
-    width: 100%;
-    max-width: 460px;
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 22px;
-    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
-}
-
-.modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 18px;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.modal-header p {
-    margin: 5px 0 0;
-    font-size: 13px;
-    color: #6b7280;
-}
-
-.modal-header button {
-    border: none;
-    background: #f3f4f6;
-    border-radius: 10px;
-    padding: 8px;
-    cursor: pointer;
-}
-
-.confirm-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 16px;
-}
-
-.confirm-summary strong {
-    color: #111827;
-    font-size: 15px;
-}
-
-.confirm-summary span {
-    color: #6b7280;
-    font-size: 13px;
-}
-
-.help-text {
-    margin-top: 6px;
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-secondary,
-.btn-primary {
-    border: none;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-}
-
-.btn-primary {
-    background: #2563eb;
-    color: #ffffff;
-}
-
-.appointment-page {
-    min-height: 100vh;
-    padding: 32px;
-    color: #0f172a;
-    background:
-        radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 30%),
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 28%),
-        linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.appointment-container {
-    max-width: 1440px;
-    margin: 0 auto;
-}
-
-.hero-card {
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 28px;
-    padding: 38px;
-    border-radius: 36px;
-    color: white;
-    background: linear-gradient(135deg, #020617 0%, #0f172a 45%, #312e81 100%);
-    box-shadow: 0 28px 90px rgba(15, 23, 42, 0.26);
-}
-
-.hero-card::before {
-    content: "";
-    position: absolute;
-    right: -90px;
-    top: -100px;
-    width: 320px;
-    height: 320px;
-    border-radius: 999px;
-    background: rgba(99, 102, 241, 0.42);
-    filter: blur(34px);
-}
-
-.hero-card::after {
-    content: "";
-    position: absolute;
-    left: 30%;
-    bottom: -160px;
-    width: 300px;
-    height: 300px;
-    border-radius: 999px;
-    background: rgba(56, 189, 248, 0.16);
-    filter: blur(32px);
-}
-
-.hero-copy,
-.hero-action {
-    position: relative;
-    z-index: 1;
-}
-
-.hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 850;
-    color: #c7d2fe;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.hero-card h1 {
-    margin: 0;
-    max-width: 720px;
-    font-size: 42px;
-    line-height: 1.07;
-    font-weight: 950;
-    letter-spacing: -0.05em;
-}
-
-.hero-card p {
-    max-width: 720px;
-    margin: 14px 0 0;
-    color: #cbd5e1;
-    font-size: 15px;
-    line-height: 1.7;
-}
-
-.primary-btn,
-.secondary-btn,
-.clear-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    border: 0;
-    cursor: pointer;
-    border-radius: 18px;
-    padding: 14px 20px;
-    font-size: 14px;
-    font-weight: 850;
-    transition: 0.2s ease;
-    white-space: nowrap;
-}
-
-.primary-btn {
-    background: #ffffff;
-    color: #020617;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
-}
-
-.primary-btn:hover {
-    transform: translateY(-2px);
-    background: #eef2ff;
-}
-
-.submit-btn {
-    width: 100%;
-    background: #111827;
-    color: #ffffff;
-}
-
-.submit-btn:hover {
-    background: #4f46e5;
-}
-
-.submit-btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.secondary-btn {
-    width: 100%;
-    border: 1px solid #e2e8f0;
-    color: #334155;
-    background: #ffffff;
-}
-
-.clear-btn {
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #475569;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 16px;
-    margin-top: 22px;
-}
-
-.stat-card {
-    padding: 22px;
-    border-radius: 28px;
-    border: 1px solid #e2e8f0;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 16px 45px rgba(15, 23, 42, 0.06);
-}
-
-.stat-card span {
-    color: #64748b;
-    font-size: 13px;
-    font-weight: 850;
-}
-
-.stat-card strong {
-    display: block;
-    margin-top: 10px;
-    font-size: 34px;
-    line-height: 1;
-    color: #0f172a;
-}
-
-.stat-card p {
-    margin: 10px 0 0;
-    color: #94a3b8;
-    font-size: 12px;
-}
-
-.stat-card.green strong {
-    color: #059669;
-}
-
-.stat-card.amber strong {
-    color: #d97706;
-}
-
-.stat-card.rose strong {
-    color: #e11d48;
-}
-
-.stat-card.blue strong {
-    color: #2563eb;
-}
-
-.panel {
-    margin-top: 22px;
-    overflow: hidden;
-    border-radius: 32px;
-    border: 1px solid #e2e8f0;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 22px 70px rgba(15, 23, 42, 0.08);
-}
-
-.panel-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-    padding: 24px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.panel-top h2 {
-    margin: 0;
-    font-size: 23px;
-    font-weight: 950;
-    letter-spacing: -0.035em;
-}
-
-.panel-top p {
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 14px;
-}
-
-.filters {
-    display: grid;
-    grid-template-columns: 1.7fr repeat(4, minmax(140px, 1fr));
-    gap: 12px;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.field-icon {
-    position: relative;
-}
-
-.field-icon svg {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    pointer-events: none;
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid #dbe3ef;
-    outline: none;
-    background: #f8fafc;
-    color: #0f172a;
-    border-radius: 18px;
-    font-size: 14px;
-    transition: 0.2s ease;
-}
-
-input,
-select {
-    height: 48px;
-    padding: 0 16px;
-}
-
-textarea {
-    padding: 14px 16px;
-    resize: none;
-}
-
-.field-icon input {
-    padding-left: 46px;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: #6366f1;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.13);
-}
-
-.invalid {
-    border-color: #fb7185 !important;
-    background: #fff1f2 !important;
-}
-
-.error-text {
-    margin: 7px 0 0;
-    color: #e11d48;
-    font-size: 12px;
-    font-weight: 750;
-}
-
-.hint-text {
-    margin: 10px 0 0;
-    color: #64748b;
-    font-size: 13px;
-    font-weight: 650;
-}
-
-.table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    min-width: 1080px;
-    border-collapse: collapse;
-}
-
-thead {
-    background: #f8fafc;
-}
-
-th {
-    padding: 16px 24px;
-    text-align: left;
-    color: #64748b;
-    font-size: 12px;
-    font-weight: 950;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-td {
-    padding: 18px 24px;
-    border-top: 1px solid #edf2f7;
-    vertical-align: middle;
-}
-
-tbody tr:hover {
-    background: #f8fafc;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.patient-cell {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.avatar {
-    width: 48px;
-    height: 48px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 17px;
-    color: #4338ca;
-    font-weight: 950;
-    background: linear-gradient(135deg, #e0e7ff, #cffafe);
-}
-
-.patient-cell strong {
-    display: block;
-    color: #0f172a;
-    font-size: 15px;
-    font-weight: 900;
-}
-
-.patient-cell span,
-.patient-cell small {
-    display: block;
-    margin-top: 4px;
-    color: #64748b;
-    font-size: 13px;
-}
-
-.doctor-cell,
-.schedule-cell span,
-.duration-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.doctor-cell {
-    color: #334155;
-    font-weight: 800;
-}
-
-.doctor-cell svg {
-    color: #6366f1;
-}
-
-.schedule-cell {
-    display: grid;
-    gap: 6px;
-}
-
-.schedule-cell span {
-    color: #475569;
-    font-size: 14px;
-    font-weight: 650;
-}
-
-.schedule-cell svg {
-    color: #94a3b8;
-}
-
-.duration-pill {
-    padding: 8px 12px;
-    border-radius: 999px;
-    color: #475569;
-    background: #f1f5f9;
-    font-size: 12px;
-    font-weight: 900;
-}
-
-.status-pill {
-    display: inline-flex;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid;
-    font-size: 12px;
-    font-weight: 950;
-}
-
-.status-pending {
-    color: #b45309;
-    background: #fffbeb;
-    border-color: #fde68a;
-}
-
-.status-confirmed {
-    color: #047857;
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-}
-
-.status-cancelled {
-    color: #be123c;
-    background: #fff1f2;
-    border-color: #fecdd3;
-}
-
-.status-completed {
-    color: #1d4ed8;
-    background: #eff6ff;
-    border-color: #bfdbfe;
-}
-
-.status-no-show {
-    color: #475569;
-    background: #f8fafc;
-    border-color: #cbd5e1;
-}
-
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 9px;
-}
-
-.actions button {
-    width: 40px;
-    height: 40px;
-    display: inline-grid;
-    place-items: center;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 14px;
-    color: #64748b;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.actions button:hover {
-    background: #eef2ff;
-    border-color: #c7d2fe;
-    color: #4f46e5;
-}
-
-.actions button.danger:hover {
-    background: #fff1f2;
-    border-color: #fecdd3;
-    color: #e11d48;
-}
-
-.empty-state {
-    padding: 46px 20px;
-    text-align: center;
-    color: #64748b;
-}
-
-.empty-state svg {
-    color: #94a3b8;
-}
-
-.empty-state h3 {
-    margin: 14px 0 4px;
-    color: #0f172a;
-}
-
-.pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 18px 24px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.pagination p {
-    margin: 0;
-    color: #64748b;
-    font-size: 14px;
-}
-
-.pagination-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.pagination-links button {
-    min-width: 40px;
-    height: 40px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 13px;
-    padding: 0 12px;
-    color: #334155;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-.pagination-links button.active {
-    background: #111827;
-    color: #ffffff;
-    border-color: #111827;
-}
-
-.pagination-links button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.drawer-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 40;
-    background: rgba(15, 23, 42, 0.58);
-    backdrop-filter: blur(7px);
-}
-
-.drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 50;
-    width: min(100%, 620px);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
-    box-shadow: -28px 0 80px rgba(15, 23, 42, 0.26);
-    transform: translateX(100%);
-    transition: transform 0.28s ease;
-}
-
-.drawer.open {
-    transform: translateX(0);
-}
-
-.drawer-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background:
-        radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 32%),
-        #ffffff;
-}
-
-.drawer-header span {
-    display: inline-flex;
-    margin-bottom: 7px;
-    color: #6366f1;
-    font-size: 12px;
-    font-weight: 950;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-}
-
-.drawer-header h2 {
-    margin: 0;
-    color: #0f172a;
-    font-size: 24px;
-    font-weight: 950;
-    letter-spacing: -0.04em;
-}
-
-.drawer-header p {
-    margin: 6px 0 0;
-    color: #64748b;
-    font-size: 14px;
-}
-
-.drawer-header button {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    border: 0;
-    border-radius: 14px;
-    background: #f1f5f9;
-    color: #475569;
-    cursor: pointer;
-}
-
-.drawer-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-    background: #f8fafc;
-}
-
-.form-section {
-    margin-bottom: 18px;
-    padding: 18px;
-    border: 1px solid #e2e8f0;
-    border-radius: 24px;
-    background: #ffffff;
-    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.045);
-}
-
-.section-title {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.section-title > div:first-child {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 14px;
-    color: #4f46e5;
-    background: #eef2ff;
-}
-
-.section-title h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 950;
-    color: #0f172a;
-}
-
-.section-title p {
-    margin: 4px 0 0;
-    color: #64748b;
-    font-size: 13px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #334155;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-.calendar-card {
-    padding: 14px;
-    border-radius: 22px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-
-.calendar-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}
-
-.calendar-head strong {
-    font-size: 15px;
-    font-weight: 950;
-}
-
-.calendar-head button {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border: 1px solid #e2e8f0;
-    border-radius: 13px;
-    background: #ffffff;
-    color: #475569;
-    cursor: pointer;
-}
-
-.weekdays,
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.weekdays {
-    margin-bottom: 8px;
-}
-
-.weekdays span {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 950;
-    text-transform: uppercase;
-}
-
-.calendar-day {
-    height: 44px;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    background: #ffffff;
-    color: #334155;
-    font-weight: 900;
-    cursor: pointer;
-    transition: 0.18s ease;
-}
-
-.calendar-day.scheduled {
-    border-color: #c7d2fe;
-    background: #eef2ff;
-    color: #4338ca;
-}
-
-.calendar-day.today {
-    box-shadow: inset 0 0 0 2px #38bdf8;
-}
-
-.calendar-day.selected {
-    border-color: #4f46e5;
-    background: #4f46e5;
-    color: #ffffff;
-    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.26);
-}
-
-.calendar-day.disabled {
-    background: #f1f5f9;
-    color: #cbd5e1;
-    cursor: not-allowed;
-    opacity: 0.75;
-}
-
-.calendar-day.muted {
-    border-color: transparent;
-    background: transparent;
-    cursor: default;
-}
-
-.calendar-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 14px;
-    color: #64748b;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.calendar-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.legend-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-}
-
-.legend-dot.scheduled {
-    background: #6366f1;
-}
-
-.legend-dot.disabled {
-    background: #cbd5e1;
-}
-
-.legend-dot.selected {
-    background: #4f46e5;
-}
-
-.slots-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.slot-btn {
-    position: relative;
-    min-height: 72px;
-    display: grid;
-    gap: 3px;
-    place-items: center;
-    border: 1px solid #bbf7d0;
-    border-radius: 18px;
-    background: #ffffff;
-    color: #047857;
-    cursor: pointer;
-    transition: 0.18s ease;
-}
-
-.slot-btn strong {
-    font-size: 13px;
-    font-weight: 950;
-}
-
-.slot-btn span {
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.slot-btn:hover {
-    transform: translateY(-1px);
-    border-color: #10b981;
-    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.12);
-}
-
-.slot-btn.selected {
-    border-color: #4f46e5;
-    background: #4f46e5;
-    color: #ffffff;
-    box-shadow: 0 16px 36px rgba(79, 70, 229, 0.24);
-}
-
-.slot-btn.selected span {
-    color: #c7d2fe;
-}
-
-.slot-btn.selected svg {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-}
-
-.slot-btn.unavailable {
-    border-color: #e2e8f0;
-    background: #f1f5f9;
-    color: #cbd5e1;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-.soft-box,
-.loading-box,
-.warning-box {
-    padding: 14px 16px;
-    border-radius: 18px;
-    font-size: 13px;
-    font-weight: 750;
-}
-
-.soft-box {
-    color: #64748b;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-}
-
-.loading-box {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    color: #4f46e5;
-    background: #eef2ff;
-    border: 1px solid #c7d2fe;
-}
-
-.warning-box {
-    margin-top: 12px;
-    color: #b45309;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-}
-
-.spin {
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.summary-card {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    padding: 18px;
-    border-radius: 24px;
-    border: 1px solid #c7d2fe;
-    background: linear-gradient(135deg, #eef2ff, #f0f9ff);
-}
-
-.summary-card span {
-    padding: 8px 12px;
-    border-radius: 999px;
-    color: #4338ca;
-    background: #ffffff;
-    font-size: 11px;
-    font-weight: 950;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.summary-card strong {
-    color: #0f172a;
-    font-size: 15px;
-}
-
-.summary-card p {
-    margin: 4px 0 0;
-    color: #475569;
-    font-size: 13px;
-    font-weight: 750;
-}
-
-.drawer-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 20px 24px;
-    border-top: 1px solid #e2e8f0;
-    background: #ffffff;
-}
-
-@media (max-width: 1280px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .filters {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .search-box {
-        grid-column: span 2;
-    }
-}
-
-@media (max-width: 760px) {
-    .appointment-page {
-        padding: 18px;
-    }
-
-    .hero-card,
-    .panel-top {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .hero-card {
-        padding: 26px;
-        border-radius: 26px;
-    }
-
-    .hero-card h1 {
-        font-size: 30px;
-    }
-
-    .stats-grid,
-    .filters,
-    .form-grid,
-    .drawer-footer,
-    .slots-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .search-box {
-        grid-column: span 1;
-    }
-
-    .pagination {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .pagination-links {
-        justify-content: flex-start;
-    }
-
-    .calendar-day {
-        height: 38px;
-        border-radius: 12px;
-    }
-}
-</style>
