@@ -5,11 +5,17 @@ namespace Modules\APPOINTMENT\Services;
 use Exception;
 use Modules\APPOINTMENT\Interfaces\AppointmentRepositoryInterface;
 use Modules\APPOINTMENT\Models\Appointment;
+use Modules\APPOINTMENT\Services\TimeSlotService;
 
 class AppointmentService {
     public function __construct(
-        private AppointmentRepositoryInterface $appointmentRepo
+        private AppointmentRepositoryInterface $appointmentRepo,
+        private ?TimeSlotService $timeSlotService = null
     ){}
+
+    public function getAvailableSlots(int $doctorId, string $date): array {
+        return $this->timeSlotService ? $this->timeSlotService->getAvailableSlots($doctorId, $date) : [];
+    }
 
     /**
      * নতুন অ্যাপয়েন্টমেন্ট তৈরি করা এবং অটোমেটিক সিরিয়াল নাম্বার বসানো।

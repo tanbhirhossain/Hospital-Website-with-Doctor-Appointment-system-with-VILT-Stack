@@ -82,6 +82,11 @@ class TimeSlotService {
         return $dateWiseSlots;
     }
 
+    public function getAvailableSlots(int $doctorId, string $date): array {
+        $slots = $this->getTimeSlotDateWise($doctorId, $date, $date);
+        return $slots[$date] ?? [];
+    }
+
     private function generateSlotsFromShifts($shifts, int $duration, array $todayBookedSlots = []): array {
         $slots = [];
 
@@ -105,7 +110,8 @@ class TimeSlotService {
                 $slots[] = [
                     'start_time' => $currentStart,
                     'end_time'   => $currentEnd,
-                    'is_booked'  => $isBooked
+                    'is_booked'  => $isBooked,
+                    'available'  => !$isBooked,
                 ];
             }
         }

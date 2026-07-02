@@ -11,7 +11,9 @@ use Modules\APPOINTMENT\Http\Requests\StoreAppointmentRequest;
 use Modules\APPOINTMENT\Http\Requests\UpdateAppointmentRequest;
 use Modules\APPOINTMENT\Interfaces\AppointmentRepositoryInterface;
 use Modules\APPOINTMENT\Services\AppointmentService;
+use Modules\APPOINTMENT\Services\TimeSlotService;
 use Modules\WEBSITE\Interfaces\DoctorRepositoryInterface;
+use Modules\WEBSITE\Interfaces\DoctorTimetableRepositoryInterface;
 use Modules\WEBSITE\Models\Doctor;
 
 class AppointmentController extends Controller
@@ -28,13 +30,15 @@ class AppointmentController extends Controller
         private readonly AppointmentService             $appointmentService,
         private readonly AppointmentRepositoryInterface $appointmentRepo,
         private readonly DoctorRepositoryInterface      $doctorRepository,
+        private readonly TimeSlotService                $timeSlotService,
+        private readonly DoctorTimetableRepositoryInterface $timetableRepo,
     ) {}
 
     public function index(): Response
     {
         $filters = request()->only(['status', 'doctor_id', 'date', 'date_from', 'date_to', 'search']);
         
-        // আমাদের রেপোজিটরির ফিল্টার মেথড অনুযায়ী পেন্ডিং, কনফার্মড বা ক্যানসেলড লিস্ট লোড করা
+        
         $status = request('status', 'pending');
         if ($status === 'confirmed') {
             $appointments = $this->appointmentRepo->confirmedList($filters);
@@ -44,14 +48,14 @@ class AppointmentController extends Controller
             $appointments = $this->appointmentRepo->pendingList($filters);
         }
 
-    $doctors = Doctor::with(['timetables' => fn ($q) => $q->where('is_active', true)])->get();
-
-    return Inertia::render('APPOINTMENT::Appointments/Index', [
-        'appointments' => $appointments,
-        'doctors'      => $doctors,
-        'statuses'     => self::STATUSES,
-        'filters'      => $filters,
-    ]);
+        $doctors = $this->doctorRepository->all();
+        
+        return Inertia::render('APPOINTMENT::Appointments/Index', [
+            'appointments' => $appointments,
+            'doctors'      => $doctors,
+            'statuses'     => self::STATUSES,
+            'filters'      => $filters,
+        ]);
     }
 
     public function create(): Response
@@ -166,17 +170,45 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'doctor_id' => 'required|exists:doctors,id',
-            'date' => 'required|date',
         ]);
 
-        // You already have the service logic! Use it here.
-        // Note: You need to inject TimeSlotService into the controller
+        $startDate = $request->input('start_date', $request->input('date'));
+        $endDate = $request->input('end_date', $startDate);
+
+        if (!$startDate) {
+            return response()->json([], 400);
+        }
+
         $slots = $this->timeSlotService->getTimeSlotDateWise(
-            $request->doctor_id, 
-            $request->date, 
-            $request->date
+            (int) $request->doctor_id, 
+            $startDate, 
+            $endDate
         );
 
-        return response()->json($slots[$request->date] ?? []);
+        if ($request->has('start_date')) {
+            return response()->json($slots);
+        }
+
+        return response()->json($slots[$startDate] ?? []);
     }
+
+    public function getDoctorAvailability(Request $request)
+    {
+
+        $request->validate([
+            'doctor_id' => 'required|exists:doctors,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $data = $this->timetableRepo->getDoctorAvilabilityDateByRange(
+            (int) $request->doctor_id,
+            $request->start_date,
+            $request->end_date
+        );
+
+       return response()->json($data);
+    }
+
+    
 }

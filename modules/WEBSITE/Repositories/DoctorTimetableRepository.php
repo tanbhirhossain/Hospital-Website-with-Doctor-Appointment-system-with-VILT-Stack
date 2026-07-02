@@ -46,11 +46,31 @@ class DoctorTimetableRepository implements DoctorTimetableRepositoryInterface{
         return DoctorTimetable::all();
     }
 
-    public function getDoctorAvilabilityDateByRange(int $doctorId, string $startDate, string $endDate){
-        $period = CarbonPeriod::create($startDate, $endDate);
-        $dates = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($period));
-        return $dates;
+    public function getDoctorAvilabilityDateByRange(int $doctorId, string $startDate, string $endDate)
+    {
+        
 
+        $period = CarbonPeriod::create($startDate, $endDate);
+        $timetables = DoctorTimetable::where('doctor_id', $doctorId)
+            ->get()
+            ->keyBy('day_of_week');
+
+        $result = [];
+        
+        foreach ($period as $date) {
+            $day = $date->dayOfWeek;
+            if (isset($timetables[$day])) {
+                $schedule = $timetables[$day];
+                $result[] = [
+                    'date'       => $date->format('Y-m-d'),
+                    'day'        => $date->format('l'),
+                    'start_time' => $schedule->start_time,
+                    'end_time'   => $schedule->end_time,
+                ];
+            }
+        }
+
+        return $result;
     }
 
 }

@@ -1,11 +1,17 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
     Plus, Search, CalendarDays, Clock, Pencil, Trash2, X, User, Mail, Phone,
     Stethoscope, Timer, ChevronLeft, ChevronRight, Loader2, Check, Sparkles,
 } from 'lucide-vue-next'
+
+// Axios defaults (CSRF token)
+axios.defaults.headers.common['X-CSRF-TOKEN'] =
+    document.querySelector('meta[name="csrf-token"]')?.content || ''
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 const props = defineProps({
     appointments: { type: Object, required: true },
@@ -50,6 +56,8 @@ const confirmSerialNumber = ref('')
 
 const calendarMonth = ref(new Date())
 const todayISO = new Date().toISOString().split('T')[0]
+const doctorAvailableDates = ref([])
+const loadingAvailability = ref(false)
 
 /* ---------------------------------------------------------
  * Inertia form
@@ -135,7 +143,7 @@ const selectedDoctorWorkingDays = computed(() => {
         .map((item) => Number(item.day_of_week))
 })
 
-const hasDoctorSchedule = computed(() => selectedDoctorWorkingDays.value.length > 0)
+const hasDoctorSchedule = computed(() => doctorAvailableDates.value.length > 0 || loadingAvailability.value)
 
 const pageStats = computed(() => ({
     total: props.appointments?.total || 0,
@@ -150,10 +158,6 @@ const currentMonthLabel = computed(() =>
     calendarMonth.value.toLocaleDateString('default', { month: 'long', year: 'numeric' }),
 )
 
-// FIX: this previously emitted { date, dayNumber, isCurrentMonth, isSelectable }
-// while the template read { date, label, muted, today, selected, selectable, hasSchedule }.
-// The mismatch meant every calendar cell rendered blank and permanently disabled —
-// which is why no date ever appeared as available after picking a doctor.
 const calendarDays = computed(() => {
     const year = calendarMonth.value.getFullYear()
     const month = calendarMonth.value.getMonth()
@@ -172,9 +176,9 @@ const calendarDays = computed(() => {
         const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
         const dayOfWeek = dateObj.getDay()
 
-        const isWorkingDay = selectedDoctorWorkingDays.value.includes(dayOfWeek)
+        const isAvailable = doctorAvailableDates.value.includes(formattedDate)
         const isPast = formattedDate < todayISO
-        const isSelectable = !isPast && (!hasDoctorSchedule.value || isWorkingDay)
+        const isSelectable = !isPast && isAvailable
 
         days.push({
             date: formattedDate,
@@ -183,7 +187,7 @@ const calendarDays = computed(() => {
             today: formattedDate === todayISO,
             selected: formattedDate === form.appointment_date,
             selectable: isSelectable,
-            hasSchedule: hasDoctorSchedule.value ? isWorkingDay : false,
+            hasSchedule: isAvailable,
         })
     }
 
@@ -211,8 +215,21 @@ watch([search, statusFilter, doctorFilter, dateFilter, perPage], () => {
     }, 350)
 })
 
-watch(() => form.doctor_id, () => {
-    resetScheduleSelection()
+watch(() => form.doctor_id, (newVal, oldVal) => {
+    if (oldVal !== undefined && oldVal !== '' && newVal !== oldVal) {
+        resetScheduleSelection()
+    }
+    if (newVal) {
+        fetchDoctorAvailability()
+    } else {
+        doctorAvailableDates.value = []
+    }
+})
+
+watch(() => calendarMonth.value, () => {
+    if (form.doctor_id) {
+        fetchDoctorAvailability()
+    }
 })
 
 watch(() => form.appointment_date, () => {
@@ -358,6 +375,7 @@ const clearFilters = () => {
     perPage.value = 15
 }
 
+// Fetch available slots for the selected date
 const fetchAvailableSlots = async (keepSelected = false) => {
     if (!form.doctor_id || !form.appointment_date) return
 
@@ -367,36 +385,101 @@ const fetchAvailableSlots = async (keepSelected = false) => {
     if (!keepSelected) clearSlotOnly()
 
     try {
-        const baseUrl = route('test-slot')
-        const query = new URLSearchParams({
-            doctor_id: form.doctor_id,
-            start_date: form.appointment_date,
-            end_date: form.appointment_date,
+        const response = await axios.get(route('appointments.available-slots'), {
+            params: {
+                doctor_id: form.doctor_id,
+                start_date: form.appointment_date,
+                end_date: form.appointment_date,
+            }
         })
 
-        const response = await fetch(`${baseUrl}?${query.toString()}`, {
-            headers: { Accept: 'application/json' },
-        })
-
-        const data = await response.json()
+        const data = response.data
         const selectedDate = form.appointment_date
 
-        if (data && data[selectedDate]) {
-            slots.value = data[selectedDate]
-            if (!slots.value.length) {
-                slotMessage.value = 'No slots found for this date. The doctor may be on rest or unavailable.'
-            }
-            return
+        // Try to extract slots from possible response structures
+        let slotsData = null
+        if (data[selectedDate]) {
+            slotsData = data[selectedDate]
+        } else if (data.slots && data.slots[selectedDate]) {
+            slotsData = data.slots[selectedDate]
+        } else if (data.data && data.data[selectedDate]) {
+            slotsData = data.data[selectedDate]
         }
 
-        slots.value = []
-        slotMessage.value = 'No available slots found for this date.'
+        if (slotsData && Array.isArray(slotsData) && slotsData.length) {
+            slots.value = slotsData
+            slotMessage.value = ''
+        } else {
+            slots.value = []
+            slotMessage.value = 'No slots found for this date. The doctor may be on rest or unavailable.'
+        }
     } catch (error) {
+        console.error('Error fetching slots:', error)
         slots.value = []
-        slotMessage.value = 'Unable to fetch time slots. Please check your network connection.'
+        slotMessage.value = 'Unable to fetch time slots. Please check your connection.'
     } finally {
         loadingSlots.value = false
     }
+}
+
+// Fetch available dates for the current month
+let availabilityTimeout = null
+const fetchDoctorAvailability = () => {
+    clearTimeout(availabilityTimeout)
+    availabilityTimeout = setTimeout(async () => {
+        if (!form.doctor_id) {
+            doctorAvailableDates.value = []
+            return
+        }
+
+        loadingAvailability.value = true
+        try {
+            const year = calendarMonth.value.getFullYear()
+            const month = calendarMonth.value.getMonth()
+            const start_date = `${year}-${String(month + 1).padStart(2, '0')}-01`
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate()
+            const end_date = `${year}-${String(month + 1).padStart(2, '0')}-${String(totalDaysInMonth).padStart(2, '0')}`
+
+            const response = await axios.get(route('appointments.doctor-availability'), {
+                params: {
+                    doctor_id: form.doctor_id,
+                    start_date: start_date,
+                    end_date: end_date,
+                }
+            })
+
+            console.log('Doctor availability response:', response)
+
+            const data = response.data
+            let dates = []
+
+            // Handle your current backend format: array of objects with 'date' property
+            if (Array.isArray(data)) {
+                dates = data.map(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        return item.date || item.appointment_date || String(item)
+                    }
+                    return String(item)
+                }).filter(Boolean)
+            } else if (data && typeof data === 'object') {
+                // If it's an object with date keys
+                if (data.dates && Array.isArray(data.dates)) {
+                    dates = data.dates
+                } else {
+                    dates = Object.keys(data).filter(d => d.match(/^\d{4}-\d{2}-\d{2}/))
+                }
+            }
+
+            doctorAvailableDates.value = dates
+                .filter(d => typeof d === 'string' && d.match(/^\d{4}-\d{2}-\d{2}/))
+                .map(d => d.substring(0, 10))
+        } catch (error) {
+            console.error('Error loading doctor availability:', error)
+            doctorAvailableDates.value = []
+        } finally {
+            loadingAvailability.value = false
+        }
+    }, 300)
 }
 
 /* ---------------------------------------------------------
@@ -414,10 +497,11 @@ const closeConfirmModal = () => {
     confirmSerialNumber.value = ''
 }
 
+// ✅ Changed to POST to match the route definition
 const submitConfirmAppointment = () => {
     if (!confirmingAppointment.value) return
 
-    router.put(
+    router.post(
         route('appointments.confirm', confirmingAppointment.value.id),
         { serial_number: confirmSerialNumber.value || null },
         { preserveScroll: true, onSuccess: () => closeConfirmModal() },

@@ -121,7 +121,7 @@ class AppointmentRepository implements AppointmentRepositoryInterface
             ->get();
     }
 
-    #[Override]
+   #[Override]
     public function pendingList($filters = [])
     {
         return Appointment::where('status', 'pending')
@@ -132,7 +132,8 @@ class AppointmentRepository implements AppointmentRepositoryInterface
                 return $query->whereDate('appointment_date', $filters['date']);
             })
             ->orderBy('appointment_date', 'asc')
-            ->get();
+            ->paginate($filters['per_page'] ?? 15)
+            ->withQueryString();
     }
 
     #[Override]
@@ -143,7 +144,8 @@ class AppointmentRepository implements AppointmentRepositoryInterface
                 return $query->where('doctor_id', $filters['doctor_id']);
             })
             ->orderBy('appointment_date', 'desc')
-            ->get();
+            ->paginate($filters['per_page'] ?? 15)
+            ->withQueryString();
     }
 
     #[Override]
@@ -154,6 +156,7 @@ class AppointmentRepository implements AppointmentRepositoryInterface
                 return $query->where('doctor_id', $filters['doctor_id']);
             })
             ->orderBy('appointment_date', 'asc')
-            ->get();
+            ->paginate($filters['per_page'] ?? 15)
+            ->withQueryString();
     }
 }

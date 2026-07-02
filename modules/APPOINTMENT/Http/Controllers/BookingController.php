@@ -2,21 +2,18 @@
 
 namespace Modules\APPOINTMENT\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\APPOINTMENT\Http\Requests\CheckAvailabilityRequest;
 use Modules\APPOINTMENT\Http\Requests\StoreAppointmentRequest;
-use Modules\APPOINTMENT\Interfaces\AppointmentServiceInterface;
-use Modules\APPOINTMENT\Interfaces\TimeSlotServiceInterface;
 use Modules\WEBSITE\Interfaces\DoctorRepositoryInterface;
 
 class BookingController extends Controller
 {
     public function __construct(
-        private readonly AppointmentServiceInterface $appointmentService,
-        private readonly TimeSlotServiceInterface    $timeSlotService,
+       // private readonly TimeSlotServiceInterface    $timeSlotService,
         private readonly DoctorRepositoryInterface   $doctorRepository,
     ) {}
 

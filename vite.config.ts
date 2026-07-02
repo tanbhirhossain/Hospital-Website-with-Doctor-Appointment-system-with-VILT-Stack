@@ -36,7 +36,7 @@ export default defineConfig({
     server: {
         host: '0.0.0.0', 
         port: 8009,
-        https: true, // 3. Force HTTPS protocol
+        https: false, // 3. Force HTTPS protocol
         hmr: {
             host: '192.168.10.215',
         },
