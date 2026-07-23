@@ -67,9 +67,10 @@ class ServiceService
     private function syncMedia(Service $service, array $data): void
     {
         foreach (['thumbnail', 'banner'] as $col) {
-            if (($data[$col] ?? null) instanceof UploadedFile) {
+            $file = $data[$col] ?? null;
+            if ($file instanceof UploadedFile && $file->isValid()) {
                 $service->clearMediaCollection($col);
-                $service->addMedia($data[$col])->toMediaCollection($col);
+                $service->addMedia($file)->toMediaCollection($col);
             }
         }
     }
@@ -82,19 +83,27 @@ class ServiceService
     private function syncGallery(Service $service, array $data): void
     {
         // Remove specific gallery images
-        if (! empty($data['remove_gallery']) && is_array($data['remove_gallery'])) {
-            foreach ($data['remove_gallery'] as $mediaId) {
-                $media = $service->media()->where('id', $mediaId)->where('collection_name', 'gallery')->first();
-                if ($media) {
-                    $media->delete();
+        $removeIds = $data['remove_gallery'] ?? [];
+        if (is_array($removeIds) && count($removeIds) > 0) {
+            foreach ($removeIds as $mediaId) {
+                $mediaId = (int) $mediaId;
+                if ($mediaId > 0) {
+                    $media = $service->media()
+                        ->where('id', $mediaId)
+                        ->where('collection_name', 'gallery')
+                        ->first();
+                    if ($media) {
+                        $media->delete();
+                    }
                 }
             }
         }
 
         // Add new gallery images
-        if (! empty($data['gallery']) && is_array($data['gallery'])) {
-            foreach ($data['gallery'] as $file) {
-                if ($file instanceof UploadedFile) {
+        $galleryFiles = $data['gallery'] ?? [];
+        if (is_array($galleryFiles) && count($galleryFiles) > 0) {
+            foreach ($galleryFiles as $file) {
+                if ($file instanceof UploadedFile && $file->isValid()) {
                     $service->addMedia($file)->toMediaCollection('gallery');
                 }
             }

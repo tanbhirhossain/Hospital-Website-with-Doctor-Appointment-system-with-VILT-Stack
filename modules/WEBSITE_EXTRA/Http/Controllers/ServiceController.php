@@ -34,19 +34,22 @@ class ServiceController extends Controller
         return redirect()->route('admin.services.index')->with('success', 'Service created successfully.');
     }
 
-    public function edit(int $id): Response
+    /**
+     * Accept either {service} or {id} route parameter.
+     */
+    public function edit($id): Response
     {
-        $service = $this->service->findById($id);
+        $service = $this->service->findById((int) $id);
 
         return Inertia::render('WEBSITE_EXTRA::Service/Edit', [
-            'service'          => $service,
-            'thumbnail'        => $service->getFirstMedia('thumbnail')
+            'service'        => $service,
+            'thumbnail'      => $service->getFirstMedia('thumbnail')
                 ? ['id' => $service->getFirstMedia('thumbnail')->id, 'url' => $service->getFirstMediaUrl('thumbnail'), 'name' => $service->getFirstMedia('thumbnail')->file_name]
                 : null,
-            'banner'           => $service->getFirstMedia('banner')
+            'banner'         => $service->getFirstMedia('banner')
                 ? ['id' => $service->getFirstMedia('banner')->id, 'url' => $service->getFirstMediaUrl('banner'), 'name' => $service->getFirstMedia('banner')->file_name]
                 : null,
-            'gallery_images'   => $service->getMedia('gallery')->map(fn ($m) => [
+            'gallery_images' => $service->getMedia('gallery')->map(fn ($m) => [
                 'id'   => $m->id,
                 'url'  => $m->getUrl(),
                 'name' => $m->file_name,
@@ -54,15 +57,15 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function update(ServiceRequest $request, int $id): RedirectResponse
+    public function update(ServiceRequest $request, $id): RedirectResponse
     {
-        $this->service->update($id, $request->validated(), Auth::id());
+        $this->service->update((int) $id, $request->validated(), Auth::id());
         return redirect()->route('admin.services.index')->with('success', 'Service updated successfully.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy($id): RedirectResponse
     {
-        $this->service->destroy($id);
+        $this->service->destroy((int) $id);
         return redirect()->route('admin.services.index')->with('success', 'Service deleted successfully.');
     }
 }
