@@ -1,0 +1,10 @@
+{
+    "name": "APPOINTMENT",
+    "alias": "appointment",
+    "description": "Doctor Appointment System with Time Slot Based Booking",
+    "priority": 100,
+    "providers": [
+        "Modules\\APPOINTMENT\\Providers\\AppointmentServiceProvider"
+    ],
+    "files": []
+}

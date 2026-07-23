@@ -1,0 +1,42 @@
+<?php
+namespace Modules\WEBSITE_EXTRA\Http\Controllers;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
+use Modules\WEBSITE_EXTRA\Http\Requests\ServiceRequest;
+use Modules\WEBSITE_EXTRA\Services\ServiceService;
+class ServiceController extends Controller
+{
+    public function __construct(protected ServiceService $service) {}
+    public function index(Request $request): Response {
+        return Inertia::render('WEBSITE_EXTRA::Service/Index', [
+            'services' => $this->service->paginate($request->only(['search'])),
+            'filters' => $request->only(['search']),
+        ]);
+    }
+    public function create(): Response {
+        return Inertia::render('WEBSITE_EXTRA::Service/Create');
+    }
+    public function store(ServiceRequest $request): RedirectResponse {
+        $this->service->store($request->validated(), Auth::id());
+        return redirect()->route('admin.services.index')->with('success','Service created successfully.');
+    }
+    public function edit(int $id): Response {
+        $service = $this->service->findById($id);
+        return Inertia::render('WEBSITE_EXTRA::Service/Edit', [
+            'service' => $service,
+            'thumbnail' => $service->getFirstMedia('thumbnail') ? ['id'=>$service->getFirstMedia('thumbnail')->id,'url'=>$service->getFirstMediaUrl('thumbnail'),'name'=>$service->getFirstMedia('thumbnail')->file_name] : null,
+        ]);
+    }
+    public function update(ServiceRequest $request, int $id): RedirectResponse {
+        $this->service->update($id, $request->validated(), Auth::id());
+        return redirect()->route('admin.services.index')->with('success','Service updated successfully.');
+    }
+    public function destroy(int $id): RedirectResponse {
+        $this->service->destroy($id);
+        return redirect()->route('admin.services.index')->with('success','Service deleted successfully.');
+    }
+}

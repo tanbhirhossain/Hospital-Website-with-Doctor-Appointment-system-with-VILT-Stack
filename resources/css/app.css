@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+@source inline("bg-linear-to-r to-transparent from-blue-800/95 via-blue-800/85 from-green-500/95 via-green-500/85 from-sky-500/95 via-sky-500/85 from-red-700/95 via-red-700/85 from-emerald-600/95 via-emerald-600/85 from-purple-700/95 via-purple-700/85 from-amber-600/95 via-amber-600/85 from-rose-600/95 via-rose-600/85 from-indigo-700/95 via-indigo-700/85 from-cyan-600/95 via-cyan-600/85 from-teal-600/95 via-teal-600/85 from-orange-600/95 via-orange-600/85 from-violet-700/95 via-violet-700/85 from-pink-600/95 via-pink-600/85 from-slate-800/95 via-slate-800/85 from-gray-800/95 via-gray-800/85 from-black/80 via-black/60");
+
+@theme {
+
+  /* Premium Left-to-Right layout shimmer keyframes */
+  --keyframes-shimmer: {
+    0% { background-position: 200% 0; }
+    100% { background-position: -50% 0; }
+  };
+
+  --animate-shimmer: shimmer 3.5s linear infinite;
+
+  /* NEW: Auto Sweep Carousel Track Keyframes */
+  --keyframes-marquee: {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(calc(-100% - 1rem)); }
+  };
+  --animate-marquee: marquee 12s linear infinite;
+
+  /* 1. Register your custom fonts */
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* 2. Register your shadcn / dashboard HSL colors */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* 4. Import Tailwind v4 compatible animations plugin if needed */
+@plugin "tailwindcss-animate";
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 1rem;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 214 100% 97%;
+    --sidebar-accent-foreground: 221.2 83.2% 43.3%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+  }
+
+  .dark {
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --sidebar: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .admin-card {
+    @apply rounded-3xl border border-slate-200/80 bg-white/95 shadow-sm shadow-slate-200/60 backdrop-blur-xl;
+  }
+
+  .admin-panel {
+    @apply rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/60;
+  }
+
+  .admin-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 hover:shadow-xl disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .admin-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 hover:shadow-md disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .admin-workspace > * {
+    @apply mx-auto w-full max-w-[1600px];
+  }
+
+  .admin-workspace input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']),
+  .admin-workspace select,
+  .admin-workspace textarea {
+    @apply rounded-2xl border-slate-200 bg-white text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100;
+  }
+
+  .admin-workspace input[type='file'] {
+    @apply rounded-2xl border border-slate-200 bg-white text-sm text-slate-600 shadow-sm file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700;
+  }
+
+  .admin-workspace label {
+    @apply text-sm font-bold text-slate-700;
+  }
+
+  .admin-workspace table {
+    @apply w-full border-separate border-spacing-0 overflow-hidden text-sm;
+  }
+
+  .admin-workspace thead tr {
+    @apply bg-slate-50/90;
+  }
+
+  .admin-workspace th {
+    @apply border-b border-slate-200 px-5 py-3.5 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500;
+  }
+
+  .admin-workspace td {
+    @apply border-b border-slate-100 px-5 py-4 align-middle text-slate-700;
+  }
+
+  .admin-workspace tbody tr {
+    @apply transition hover:bg-blue-50/40;
+  }
+
+  .admin-workspace h1 {
+    @apply tracking-tight text-slate-950;
+  }
+}
