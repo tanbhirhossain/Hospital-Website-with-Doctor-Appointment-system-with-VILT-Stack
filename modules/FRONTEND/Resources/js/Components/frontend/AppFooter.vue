@@ -92,11 +92,11 @@
 
 <script setup>
 const socials = [
-    { name: 'facebook', icon: 'facebook-f', url: 'https://facebook.com/amzhospital' },
-    { name: 'twitter', icon: 'twitter', url: 'https://twitter.com/amzhospital' },
-    { name: 'instagram', icon: 'instagram', url: 'https://instagram.com/amzhospital' },
-    { name: 'linkedin', icon: 'linkedin-in', url: 'https://linkedin.com/company/amzhospital' },
-    { name: 'youtube', icon: 'youtube', url: 'https://youtube.com/amzhospital' },
+    { name: 'facebook', icon: 'facebook-f', url: 'https://facebook.com/amzhospitalltd' },
+    { name: 'twitter', icon: 'twitter', url: 'https://twitter.com/amzhospitalltd' },
+    { name: 'instagram', icon: 'instagram', url: 'https://instagram.com/amzhospitalltd' },
+    { name: 'linkedin', icon: 'linkedin-in', url: 'https://linkedin.com/company/amzhospitalltd' },
+    { name: 'youtube', icon: 'youtube', url: 'https://youtube.com/@amzhospitalltd' },
 ]
 
 const quickLinks = [
@@ -104,7 +104,7 @@ const quickLinks = [
     { href: '/about', label: 'About Us' },
     { href: '/departments', label: 'Departments' },
     { href: '/doctors', label: 'Doctors' },
-    { href: '#services', label: 'Services' },
+    { href: '/services', label: 'Services' },
     { href: '/contact', label: 'Contact' },
 ]
 
@@ -112,7 +112,6 @@ const services = [
     'Emergency Care 24/7',
     'Diagnostic Services',
     'Surgical Services',
-    'Cardiac Care',
     'Maternity Services',
     'Pharmacy',
     'Laboratory',

@@ -9,6 +9,7 @@ use Modules\FRONTEND\Http\Controllers\FrontDoctorController;
 use Modules\FRONTEND\Http\Controllers\FrontOtherController;
 use Modules\FRONTEND\Http\Controllers\FrontServiceController;
 use Modules\FRONTEND\Http\Controllers\HomepageController;
+use Modules\WEBSITE\Models\Department;
 
 Route::middleware(['web', 'auth'])->group(function (): void {
     //
@@ -36,3 +37,7 @@ Route::post('/contact', [FrontOtherController::class, 'storeContact'])->name('fr
 
 Route::get('/services', [FrontServiceController::class, 'index'])->name('front.service.index');
 Route::get('/services/{slug}', [FrontServiceController::class, 'details'])->name('front.service.details');
+
+Route::get('/test-dept', function () {
+    dd(Department::orderBy('serial', 'asc')->get(['name', 'slug']));
+});

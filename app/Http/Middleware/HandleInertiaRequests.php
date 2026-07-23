@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Navigation\ModuleNavigation;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use App\Support\Navigation\ModuleNavigation;
+use Modules\WEBSITE\Models\Department;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -39,7 +40,7 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
-
+        
         return array_merge(parent::share($request), [
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
@@ -52,6 +53,11 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
             ],
             'navigation' => fn () => app(ModuleNavigation::class)->build($request),
-        ]);
+
+            'departments' => fn () => Department::where('isActive', 1)->orderBy('serial', 'asc')->get(['name', 'slug'])      
+                                    
+            ]);
+        
+        
     }
 }

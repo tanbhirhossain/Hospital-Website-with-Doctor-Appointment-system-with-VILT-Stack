@@ -17,4 +17,6 @@ interface DepartmentRepositoryInterface
     public function delete(Department $department): bool;
 
     public function list_for_home_page(): Collection;
+
+    public function listForNavigation(): Collection;
 }

@@ -89,4 +89,12 @@ class DepartmentRepository implements DepartmentRepositoryInterface
         return Department::with('media')->where('is_active', 1)->whereNotNull('text-color')->limit(6)->get();
         
     }
+
+    #[Override]
+    public function listForNavigation(): Collection
+    {
+       return Department::where('is_active', 1)
+            ->orderBy('serial')
+            ->get(['name', 'slug']); 
+    }
 }
