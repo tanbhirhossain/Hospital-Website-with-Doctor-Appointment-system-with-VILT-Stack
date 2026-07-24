@@ -62,11 +62,22 @@ async function sendMessage() {
         if (doctorMatch) {
             try {
                 doctors = JSON.parse(doctorMatch[1])
-                cleanReply = reply.replace(/<!--DOCTORS:[\s\S]*?-->/, '').trim()
+                cleanReply = cleanReply.replace(/<!--DOCTORS:[\s\S]*?-->/, '').trim()
             } catch {}
         }
 
-        pushMessage('assistant', cleanReply, doctors)
+        // Check for embedded lab report card data
+        const labMatch = reply.match(/<!--LAB_REPORT:([\s\S]*?)-->/)
+        let labReport = null
+
+        if (labMatch) {
+            try {
+                labReport = JSON.parse(labMatch[1])
+                cleanReply = cleanReply.replace(/<!--LAB_REPORT:[\s\S]*?-->/, '').trim()
+            } catch {}
+        }
+
+        pushMessage('assistant', cleanReply, doctors, labReport)
     } catch (err) {
         console.error('[ChatHub] API error:', err)
         pushMessage('assistant', 'দুঃখিত, সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।')
@@ -94,8 +105,8 @@ function clearChat() {
 }
 
 // ── Message helpers ────────────────────────────────────────────────
-function pushMessage(role, content, doctors = null) {
-    messages.value.push({ id: nextId(), role, content, doctors, time: now() })
+function pushMessage(role, content, doctors = null, labReport = null) {
+    messages.value.push({ id: nextId(), role, content, doctors, labReport, time: now() })
 }
 
 // ── Markdown renderer (lightweight, safe) ──────────────────────────
@@ -251,6 +262,37 @@ onMounted(() => {
                                 >
                                     বুক
                                 </button>
+                            </div>
+                        </div>
+
+                        <!-- Lab Report Card (if present) -->
+                        <div v-if="msg.labReport" class="w-full mt-1.5">
+                            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 shadow-sm">
+                                <div class="flex items-start gap-2.5">
+                                    <div class="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-white">
+                                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-bold text-emerald-900 mb-0.5">ল্যাব রিপোর্ট প্রস্তুত</p>
+                                        <p class="text-[11px] text-slate-700 font-medium">{{ msg.labReport.PatientName }}</p>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">তারিখ: {{ msg.labReport.InvDate }}</p>
+                                        <p class="text-[10px] text-slate-500">ইনভয়েস: #{{ msg.labReport.InvNo }}</p>
+                                    </div>
+                                </div>
+                                <a
+                                    :href="msg.labReport.ReportLink"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="mt-2.5 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors shadow-sm"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
+                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    রিপোর্ট দেখুন
+                                </a>
                             </div>
                         </div>
 

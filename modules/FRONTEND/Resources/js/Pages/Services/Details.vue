@@ -111,10 +111,10 @@
                         <!-- Service Description (from rich text) -->
                         <section class="bg-white rounded-2xl p-8 lg:p-12 shadow-sm border border-slate-100">
                             <div class="flex items-center gap-3 mb-6">
-                                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
+                                <!-- <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">
                                     {{ service.icon || '🏥' }}
-                                </div>
-                                <h2 class="text-2xl lg:text-3xl font-bold text-slate-900">About This Service</h2>
+                                </div> -->
+                                <!-- <h2 class="text-2xl lg:text-3xl font-bold text-slate-900">About This Service</h2> -->
                             </div>
                             <div
                                 v-if="service.description"

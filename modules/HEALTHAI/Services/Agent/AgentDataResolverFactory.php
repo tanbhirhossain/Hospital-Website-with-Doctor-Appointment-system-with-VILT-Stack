@@ -12,6 +12,10 @@ use Modules\HEALTHAI\Services\Agent\Resolvers\ExcelResolver;
 use Modules\HEALTHAI\Services\Agent\Resolvers\GeneralResolver;
 use Modules\HEALTHAI\Services\Agent\Resolvers\PharmacyResolver;
 
+use Modules\HEALTHAI\Services\Agent\Resolvers\LabReportResolver;
+use Modules\HEALTHAI\Services\Agent\Resolvers\HealthTipsResolver;
+use Modules\HEALTHAI\Services\Agent\Resolvers\DietPlanResolver;
+
 final class AgentDataResolverFactory
 {
     private static array $map = [
@@ -22,6 +26,9 @@ final class AgentDataResolverFactory
         AgentIntent::API_BEDS->value            => BedResolver::class,
         AgentIntent::API_PHARMACY->value        => PharmacyResolver::class,
         AgentIntent::BOOK_APPOINTMENT->value    => AppointmentResolver::class,
+        AgentIntent::LAB_REPORT->value          => LabReportResolver::class,
+        AgentIntent::HEALTH_TIPS->value         => HealthTipsResolver::class,
+        AgentIntent::DIET_PLAN->value           => DietPlanResolver::class,
         AgentIntent::GENERAL->value             => GeneralResolver::class,
     ];
 

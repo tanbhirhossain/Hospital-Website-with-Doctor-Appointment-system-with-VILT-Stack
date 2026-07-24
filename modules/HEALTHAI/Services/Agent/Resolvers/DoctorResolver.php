@@ -7,7 +7,14 @@ use Modules\WEBSITE\Services\DoctorService;
 
 final class DoctorResolver implements DataResolverInterface
 {
-    private const STRIP_WORDS = ['"', "'", 'er', 'doctor', 'daktar', 'kara', 'keo', 'ache', 'ki', '?'];
+    private const STRIP_WORDS = [
+        // English
+        '"', "'", 'er', 'doctor', 'daktar', 'kara', 'keo', 'ache', 'ki', '?',
+        'list', 'all', 'show', 'give', 'find', 'search',
+        // Bengali
+        'ডাক্তার', 'ডাক্টার', 'দাক্তার', 'চিকিৎসক',
+        'তালিকা', 'লিস্ট', 'নাম', 'খুঁজুন',
+    ];
 
     public function __construct(private readonly DoctorService $doctorService) {}
 

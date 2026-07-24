@@ -49,6 +49,13 @@ class AiAgentController extends Controller
                 $reply .= '<!--DOCTORS:' . json_encode($doctorPayload, JSON_UNESCAPED_UNICODE) . '-->';
             }
 
+            // Attach lab report card data
+            $labReport = AiAgentService::getLastLabReportPayload();
+            if (! empty($labReport)) {
+                $reply .= '<!--LAB_REPORT:' . json_encode($labReport, JSON_UNESCAPED_UNICODE) . '-->';
+                AiAgentService::clearLastLabReportPayload();
+            }
+
             return response()->json([
                 'reply'   => $reply,
                 'history' => $updatedHistory,

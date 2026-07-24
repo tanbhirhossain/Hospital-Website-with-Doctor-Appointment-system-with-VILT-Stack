@@ -11,6 +11,9 @@ enum AgentIntent: string
     case API_BEDS            = 'API_BEDS';
     case API_PHARMACY        = 'API_PHARMACY';
     case BOOK_APPOINTMENT    = 'BOOK_APPOINTMENT';
+    case LAB_REPORT          = 'LAB_REPORT';
+    case HEALTH_TIPS         = 'HEALTH_TIPS';
+    case DIET_PLAN           = 'DIET_PLAN';
     case GENERAL             = 'GENERAL';
 
     public static function fromString(string $value): self

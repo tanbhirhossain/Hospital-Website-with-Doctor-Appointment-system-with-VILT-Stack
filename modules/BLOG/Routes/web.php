@@ -9,8 +9,8 @@ Route::middleware('web')->group(function (): void {
     Route::get('/blog/{slug}', [PublicBlogController::class, 'show'])->name('blog.show');
 });
 
-Route::middleware(['web', 'auth'])->group(function (): void {
-    Route::resource('blogs', BlogController::class)->only(['index', 'store', 'update', 'destroy']);
+Route::middleware(['web', 'auth'])->prefix('admin')->group(function (): void {
+    Route::resource('blogs', BlogController::class)->only(['index', 'store', 'update', 'destroy'])->names('blogs');
     Route::patch('/blogs/{blog}/restore', [BlogController::class, 'restore'])->name('blogs.restore');
     Route::delete('/blogs/{blog}/force', [BlogController::class, 'forceDelete'])->name('blogs.force-delete');
 });

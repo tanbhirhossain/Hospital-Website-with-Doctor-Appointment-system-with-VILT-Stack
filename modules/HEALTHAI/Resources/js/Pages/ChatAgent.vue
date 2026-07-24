@@ -106,6 +106,45 @@
               </div>
             </template>
 
+            <!-- Lab Report Card -->
+            <template v-if="msg.labReport">
+              <div class="bubble" v-html="renderMarkdown(msg.content)"></div>
+              <div class="lab-report-card">
+                <div class="lab-report-header">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <span>ল্যাব রিপোর্ট</span>
+                </div>
+                <div class="lab-report-body">
+                  <div class="lab-report-field">
+                    <span class="lab-label">রোগীর নাম:</span>
+                    <span class="lab-value">{{ msg.labReport.PatientName }}</span>
+                  </div>
+                  <div class="lab-report-field">
+                    <span class="lab-label">তারিখ:</span>
+                    <span class="lab-value">{{ msg.labReport.InvDate }}</span>
+                  </div>
+                  <div class="lab-report-field">
+                    <span class="lab-label">ইনভয়েস নং:</span>
+                    <span class="lab-value">#{{ msg.labReport.InvNo }}</span>
+                  </div>
+                </div>
+                <a
+                  :href="msg.labReport.ReportLink"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="lab-report-btn"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  রিপোর্ট দেখুন
+                </a>
+              </div>
+            </template>
+
             <!-- Normal bubble -->
             <div v-else class="bubble" v-html="renderMarkdown(msg.content)"></div>
 
@@ -218,11 +257,22 @@ async function sendMessage() {
     if (doctorMatch) {
       try {
         doctors    = JSON.parse(doctorMatch[1])
-        cleanReply = reply.replace(/<!--DOCTORS:[\s\S]*?-->/, '').trim()
+        cleanReply = cleanReply.replace(/<!--DOCTORS:[\s\S]*?-->/, '').trim()
       } catch {}
     }
 
-    pushMessage('assistant', cleanReply, doctors)
+    // Lab report card
+    const labMatch = reply.match(/<!--LAB_REPORT:([\s\S]*?)-->/)
+    let labReport = null
+
+    if (labMatch) {
+      try {
+        labReport  = JSON.parse(labMatch[1])
+        cleanReply = cleanReply.replace(/<!--LAB_REPORT:[\s\S]*?-->/, '').trim()
+      } catch {}
+    }
+
+    pushMessage('assistant', cleanReply, doctors, labReport)
 
   } catch (err) {
     console.error('[ChatAgent] API error:', err)
@@ -253,8 +303,8 @@ function clearChat() {
 
 // ── Message helpers ────────────────────────────────────────────────────────
 
-function pushMessage(role, content, doctors = null) {
-  messages.value.push({ id: nextId(), role, content, doctors, time: now() })
+function pushMessage(role, content, doctors = null, labReport = null) {
+  messages.value.push({ id: nextId(), role, content, doctors, labReport, time: now() })
 }
 
 // ── Markdown renderer ──────────────────────────────────────────────────────
@@ -579,6 +629,76 @@ onMounted(() => inputEl.value?.focus())
   white-space: nowrap;
 }
 .dc-book-btn:hover { background: #0d6560; transform: scale(1.03); }
+
+/* ── Lab Report card ─────────────────────────────────────── */
+.lab-report-card {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .1);
+}
+.lab-report-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d1fae5;
+}
+.lab-report-header svg { stroke: #059669; }
+.lab-report-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.lab-report-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.lab-label {
+  color: #64748b;
+  font-weight: 500;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+.lab-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+.lab-report-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, .3);
+}
+.lab-report-btn:hover {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, .4);
+}
 
 /* ── Input bar ──────────────────────────────────────────── */
 .chat-input-bar {

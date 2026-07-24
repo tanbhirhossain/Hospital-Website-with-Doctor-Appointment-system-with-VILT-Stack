@@ -123,7 +123,7 @@ We foster a culture of active empathy, continuous capacity building, and operati
 const galleryFilters = ['all', 'infrastructure', 'facilities', 'equipment', 'departments']
 
 const servicesList = [
-  { bg: 'from-blue-50', icon: 'fa-ambulance', title: '24/7 Emergency Services', desc: 'Round-the-clock emergency medical care with rapid response team', items: ['Critical Care Unit', 'Intensive Care Unit', 'High Dependancy Unit', 'Dialysis'] },
+  { bg: 'from-blue-50', icon: 'fa-bed-pulse', title: 'Advanced Critical Care Services', desc: '24/7 high-dependency monitoring, intensive care, and specialized life support services', items: ['Critical Care Unit', 'Intensive Care Unit', 'High Dependancy Unit', 'Dialysis'] },
   { bg: 'from-green-50', icon: 'fa-x-ray', title: 'Diagnostic Services', desc: 'Advanced diagnostic facilities with latest technology', items: ['CT Scan & MRI', 'Ultrasound', 'Laboratory Tests', 'Cath Lab'] },
   { bg: 'from-purple-50', icon: 'fa-procedures', title: 'Surgical Services', desc: 'Expert surgical care with modern operation theaters', items: ['General Surgery', 'Laparoscopic Surgery', 'Specialized Surgery', 'Laser Surgery'] },
   { bg: 'from-red-50', icon: 'fa-utensils', title: 'Canteen Service', desc: 'Hygienic in-house canteen with fresh meals for patients, attendants, and visitors.', items: ['Patient Diet Meals', 'Attendant Meal Options', 'Tea & Refreshments'] },
