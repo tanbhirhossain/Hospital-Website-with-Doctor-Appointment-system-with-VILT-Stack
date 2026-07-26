@@ -13,5 +13,7 @@ interface COERepositoryInterface{
     public function findBySlug(string $slug): CenterOfExcellence;
     public function all();
     public function allActive();
+
     public function listForHome();
+
 }

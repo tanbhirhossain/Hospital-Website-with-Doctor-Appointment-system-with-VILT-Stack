@@ -4,7 +4,6 @@ namespace Modules\WEBSITE\Repositories;
 
 use Modules\WEBSITE\Interfaces\COERepositoryInterface;
 use Modules\WEBSITE\Models\CenterOfExcellence;
-use Override;
 
 class COERepository implements COERepositoryInterface{
     public function create(array $data): CenterOfExcellence
@@ -43,7 +42,7 @@ class COERepository implements COERepositoryInterface{
         return CenterOfExcellence::with('media')->where('is_active', true)->get();
     }
 
-    #[Override]
+        
     public function listForHome()
     {
         return CenterOfExcellence::with('media')->take(6)->get();

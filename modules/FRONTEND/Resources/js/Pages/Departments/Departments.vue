@@ -126,13 +126,7 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="mt-20 text-center">
-                    <a href="#departments" class="inline-flex items-center group text-blue-800 font-bold tracking-widest uppercase text-sm">
-                        View All Medical Units 
-                        <span class="ml-4 w-12 h-px bg-blue-800 transition-all group-hover:w-20"></span>
-                    </a>
-                </div>
+
             </div>
         </section>
     </FrontendLayout>

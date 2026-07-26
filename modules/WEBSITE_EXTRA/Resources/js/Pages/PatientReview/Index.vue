@@ -16,6 +16,8 @@ interface Review {
     review_text: string; rating: number; status: 'pending' | 'approved' | 'rejected';
     is_featured: boolean; admin_note: string | null;
     media: { avatar: string | null };
+    bg: string;
+    cardBg: string;
 }
 interface Props { reviews: { data: Review[]; total: number; links: any[] }; filters: any; doctors: Doctor[]; }
 const props = defineProps<Props>();
@@ -29,9 +31,11 @@ const searchQuery = ref(props.filters.search ?? '');
 
 const form = useForm({
     _method: 'post' as 'post' | 'put',
-    patient_name: '', patient_phone: '', doctor_id: null as number | null,
+    patient_name: '', patient_phone: '', doctor_id: null as number | null, 
     department: '', review_text: '', rating: 5, status: 'pending',
     is_featured: false, admin_note: '', avatar: null as File | null,
+    bg: 'from-blue-800 to-sky-500',
+    cardBg: 'from-blue-50'
 });
 const isEditing = computed(() => editing.value !== null);
 const statusColors = { pending: 'bg-amber-50 text-amber-700 ring-amber-200', approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200', rejected: 'bg-red-50 text-red-700 ring-red-200' };
@@ -44,6 +48,8 @@ const editItem = (r: Review) => {
     form.doctor_id = r.doctor_id; form.department = r.department ?? '';
     form.review_text = r.review_text; form.rating = r.rating;
     form.status = r.status; form.is_featured = r.is_featured; form.admin_note = r.admin_note ?? '';
+    form.bg = r.bg;
+    form.cardBg = r.cardBg;
     form.clearErrors();
 };
 
@@ -121,9 +127,17 @@ const applyFilters = () => {
                                     <option v-for="d in doctors" :key="d.id" :value="d.id">{{ d.name }}</option>
                                 </select>
                             </div>
-                            <div>
+                            <!-- <div>
                                 <Label>Department</Label>
                                 <Input v-model="form.department" class="mt-1" />
+                            </div> -->
+                            <div>
+                                <Label>BG Color</Label>
+                                <Input v-model="form.bg"  class="mt-1" />
+                            </div>
+                            <div>
+                                <Label>CARD BG Color</Label>
+                                <Input v-model="form.cardBg" class="mt-1" />
                             </div>
                             <div>
                                 <Label>Review <span class="text-red-500">*</span></Label>

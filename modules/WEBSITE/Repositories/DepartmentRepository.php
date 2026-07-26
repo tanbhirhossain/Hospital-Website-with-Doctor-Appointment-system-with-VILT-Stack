@@ -90,7 +90,6 @@ class DepartmentRepository implements DepartmentRepositoryInterface
         
     }
 
-    #[Override]
     public function listForNavigation(): Collection
     {
        return Department::where('is_active', 1)

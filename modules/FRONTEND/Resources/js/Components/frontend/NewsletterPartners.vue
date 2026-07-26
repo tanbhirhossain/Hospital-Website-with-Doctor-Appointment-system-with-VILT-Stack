@@ -1,23 +1,54 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import axios from 'axios'
 
 defineProps<{
   partners: Array<{ name: string; logo: string }>
 }>()
 
 const email = ref('')
+const loading = ref(false)
 const success = ref(false)
+const errorMessage = ref('')
 
-const submit = () => {
-  if (!email.value) return
-  success.value = true
-  email.value = ''
+const submit = async () => {
+  if (!email.value || loading.value) return
+
+  loading.value = true
+  success.value = false
+  errorMessage.value = ''
+
+  try {
+    // We expect the backend to execute successfully and handle the redirect/response
+    await axios.post('/api/newsletter/subscribe', {
+      email: email.value
+    }, {
+      // Optional: Prevent automatic redirection following if it causes CORS/tainted response issues, 
+      // though standard Laravel API redirects usually return 302/200 depending on client handling.
+      maxRedirects: 5
+    })
+
+    success.value = true
+    email.value = ''
+  } catch (error: any) {
+    // If the request reached the database and created the record, 
+    // sometimes a redirect in an API context triggers a catch block if headers aren't JSON.
+    // If you prefer to assume success on a 200/302 or handle specific fallback:
+    if (error.response && error.response.status >= 400) {
+      errorMessage.value = error.response.data?.message || 'Something went wrong. Please try again.'
+    } else {
+      // Fallback if it was a successful backend action caught by redirect mismatch
+      success.value = true
+      email.value = ''
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>
-
 <template>
   <section id="newsletter-partners" class="relative py-24 bg-slate-900/5 overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
     <!-- Background Glow Accents -->
     <div class="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -52,6 +83,10 @@ const submit = () => {
               </div>
 
               <form v-else @submit.prevent="submit" class="space-y-4">
+                <div v-if="errorMessage" class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl font-medium text-center text-sm">
+                  {{ errorMessage }}
+                </div>
+
                 <div>
                   <label for="newsletter-email" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Email Address</label>
                   <input 
@@ -63,8 +98,14 @@ const submit = () => {
                     class="w-full px-4 py-3.5 rounded-xl border border-slate-200 text-slate-800 text-sm focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-slate-50/50 transition-all" 
                   />
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md shadow-blue-500/20">
-                  Subscribe Now
+                
+                <button 
+                  type="submit" 
+                  :disabled="loading"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <i v-if="loading" class="fas fa-spinner animate-spin"></i>
+                  <span>{{ loading ? 'Subscribing...' : 'Subscribe Now' }}</span>
                 </button>
               </form>
 

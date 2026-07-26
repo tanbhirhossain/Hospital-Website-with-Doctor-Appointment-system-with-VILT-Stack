@@ -1,7 +1,9 @@
 <?php
 namespace Modules\WEBSITE_EXTRA\Interfaces;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Modules\WEBSITE_EXTRA\Models\PatientReview;
+
 interface PatientReviewRepositoryInterface
 {
     public function all(array $filters = []): LengthAwarePaginator;
@@ -9,4 +11,6 @@ interface PatientReviewRepositoryInterface
     public function create(array $data): PatientReview;
     public function update(PatientReview $model, array $data): PatientReview;
     public function delete(PatientReview $model): bool;
+
+    public function listForHomepage(): Collection;
 }

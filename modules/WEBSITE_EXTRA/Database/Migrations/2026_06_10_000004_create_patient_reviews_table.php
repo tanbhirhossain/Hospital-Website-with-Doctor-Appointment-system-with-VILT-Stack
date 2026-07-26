@@ -15,6 +15,12 @@ return new class extends Migration {
             $table->enum('status', ['pending','approved','rejected'])->default('pending');
             $table->boolean('is_featured')->default(false);
             $table->text('admin_note')->nullable();
+
+            //STYLING
+            $table->string('bg');
+            $table->string('cardBg');
+
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

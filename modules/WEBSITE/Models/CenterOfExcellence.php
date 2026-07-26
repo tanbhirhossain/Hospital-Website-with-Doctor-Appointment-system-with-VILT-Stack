@@ -34,6 +34,7 @@ class CenterOfExcellence extends Model implements HasMedia
         return strip_tags($this->description);
     }
 
+
     protected static function booted(): void
     {
         static::creating(function ($model) {

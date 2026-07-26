@@ -3,50 +3,71 @@
 namespace Modules\FRONTEND\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Modules\BLOG\Services\BlogService;
 use Modules\GALLERY\Interfaces\GalleryItemRepositoryInterface;
+use Modules\WEBSITE_EXTRA\Interfaces\HeroSliderRepositoryInterface;
+use Modules\WEBSITE_EXTRA\Interfaces\PatientReviewRepositoryInterface;
 use Modules\WEBSITE\Interfaces\COERepositoryInterface;
 use Modules\WEBSITE\Interfaces\DepartmentRepositoryInterface;
 use Modules\WEBSITE\Interfaces\DoctorRepositoryInterface;
-use Modules\WEBSITE_EXTRA\Interfaces\HeroSliderRepositoryInterface;
 
 class HomepageController extends Controller
 {
     public function __construct(
-        private DoctorRepositoryInterface $drRepo,
-        private DepartmentRepositoryInterface $deptRepo,
-        private COERepositoryInterface $coeRepo,
-        private BlogService $blogService,
-        private HeroSliderRepositoryInterface $slideRepo,
-        private GalleryItemRepositoryInterface $galleryRepo
-    ){}
+        private readonly DoctorRepositoryInterface $drRepo,
+        private readonly DepartmentRepositoryInterface $deptRepo,
+        private readonly COERepositoryInterface $coeRepo,
+        private readonly BlogService $blogService,
+        private readonly HeroSliderRepositoryInterface $slideRepo,
+        private readonly GalleryItemRepositoryInterface $galleryRepo,
+        private readonly PatientReviewRepositoryInterface $patientReviewRepo
+    ) {}
 
-    public function index(){
-        
+    public function index()
+    {
+        $slides = $this->slideRepo->allforHomepage()->map(function ($slide) {
+            if (is_string($slide->buttons)) {
+                $cleanJson = str_replace(["\r\n", "\r", "\n"], '', $slide->buttons);
+                $slide->buttons = json_decode(stripslashes($cleanJson), true);
+            }
+            return $slide;
+        });
 
+        $reviews = $this->patientReviewRepo->listForHomepage()->map(function ($review) {
+            $text = $review->review_text ?? '';
+            $isLong = Str::length($text) > 100;
 
-    $slides = $this->slideRepo->allforHomepage();
+            // Generate strict 2-character initials dynamically if database column is null/empty
+            $initials = $review->initials;
+            if (!$initials && $review->patient_name) {
+                $words = explode(' ', trim($review->patient_name));
+                $initials = count($words) >= 2 
+                    ? mb_substr($words[0], 0, 1) . mb_substr($words[count($words) - 1], 0, 1)
+                    : mb_substr($words[0], 0, 2);
+            }
+            $initials = strtoupper(mb_substr($initials ?: 'PA', 0, 2));
 
-    foreach ($slides as $slide) {
-        if (is_string($slide->buttons)) {
-            $cleanJson = str_replace(["\r\n", "\r", "\n"], '', $slide->buttons);
-            $cleanJson = stripslashes($cleanJson); 
-            $slide->buttons = json_decode($cleanJson, true);
-        }
-    }
+            return [
+                'initials' => $initials,
+                'bg' => $review->bg ?? 'from-blue-800 to-sky-500',
+                'cardBg' => $review->cardBg ?? 'from-blue-50',
+                'name' => $review->patient_name ?? 'Anonymous',
+                'short' => $isLong ? Str::substr($text, 0, 100) . '...' : $text,
+                'full' => $isLong ? Str::substr($text, 100) : '',
+            ];
+        });
+        // dd($reviews);
 
-        // dd($this->coeRepo->all());
-        return Inertia::render('FRONTEND::Home',[
+        return Inertia::render('FRONTEND::Home', [
             'doctors' => $this->drRepo->allHomePageDoctor(),
             'departments' => $this->deptRepo->list_for_home_page(),
             'centers' => $this->coeRepo->listForHome(),
             'blogs' => $this->blogService->latestThree(),
-            'slides' => $this->slideRepo->allforHomepage(),
-            'galleries' => $this->galleryRepo->allforHome()
+            'slides' => $slides,
+            'galleries' => $this->galleryRepo->allforHome(),
+            'reviews' => $reviews,
         ]);
-
-
     }
-    
 }

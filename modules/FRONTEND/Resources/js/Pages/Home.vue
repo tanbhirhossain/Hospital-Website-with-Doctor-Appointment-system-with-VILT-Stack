@@ -31,7 +31,8 @@ const props = defineProps({
   slides: { type: Array, required: true },
   galleries: { type: Array, required: true }, 
   centers: {type: Array, required: true},
-  doctors: {type: Array, required: true}
+  doctors: {type: Array, required: true},
+  reviews: {type: Array, required: true}
 })
 
 // MAPPING LOGIC: Transform backend data into the format GallerySection needs
@@ -60,9 +61,9 @@ const getBadgeColor = (categoryName?: string) => {
 
 const quickCards = [
   { gradient: 'from-[blue] to-[blue]', icon: 'fa-user-md', title: 'Find Doctor', link: '/doctors' },
-  { gradient: 'from-[#24a6db] to-[#5cc6e0]', icon: 'fa-calendar-check', title: 'Book an Appointment', link: '#appointment' },
-  { gradient: 'from-[#1fb18f] to-[#6dd8bc]', icon: 'fa-home', title: 'Home Sample Collection', link: '#services' },
-  { gradient: 'from-[#dda229] to-[#efd56d]', icon: 'fa-file-medical', title: 'Online Lab Report', link: '#contact' },
+  { gradient: 'from-[#24a6db] to-[#5cc6e0]', icon: 'fa-calendar-check', title: 'Book an Appointment', link: '/appointment' },
+  { gradient: 'from-[#1fb18f] to-[#6dd8bc]', icon: 'fa-home', title: 'Home Sample Collection', link: 'https://www.amzhospitalbd.com/blood/home-collections' },
+  { gradient: 'from-[#dda229] to-[#efd56d]', icon: 'fa-file-medical', title: 'Online Lab Report', link: 'http://erp.amzhospitalbd.com/online-report/find' },
   { gradient: 'from-[#e56775] to-[#ef8f9b]', icon: 'fa-map-marker-alt', title: 'Find Us', link: '#contact' },
 ]
 
@@ -156,14 +157,14 @@ const packages = [
   { bg: 'bg-amber-100', color: 'text-amber-700', icon: 'fa-users', title: 'Family Package', desc: 'Combined health screening for 2 adults including consultation and core labs.', price: 'BDT 8,900' },
 ]
 
-const testimonials = [
-  { initials: 'AH', bg: 'from-blue-800 to-sky-500', cardBg: 'from-blue-50', name: 'Abdul Hamid', short: 'Excellent hospital with caring staff and very professional doctors.', full: ' The facilities are modern, and the care quality was consistently high from admission to discharge. Highly recommended for trusted healthcare.' },
-  { initials: 'RB', bg: 'from-emerald-500 to-emerald-600', cardBg: 'from-green-50', name: 'Rahima Begum', short: 'I received excellent care during my stay and felt supported.', full: ' The nursing team was attentive, and doctors explained each step clearly so my family and I stayed confident throughout treatment.' },
-  { initials: 'MK', bg: 'from-purple-500 to-purple-600', cardBg: 'from-purple-50', name: 'Mahmud Khan', short: 'Top-notch medical facility with advanced equipment and fast service.', full: ' The emergency department handled my case quickly, and follow-up care was just as good. I am grateful for their professionalism.' },
-  { initials: 'SN', bg: 'from-cyan-500 to-cyan-600', cardBg: 'from-cyan-50', name: 'Shila Nasrin', short: 'Clean environment and excellent diagnostics at AMZ Hospital.', full: ' My reports were delivered quickly, and consultation was clear and reassuring. The whole process felt organized and patient-friendly.' },
-  { initials: 'TU', bg: 'from-amber-500 to-amber-600', cardBg: 'from-amber-50', name: 'Tanvir Uddin', short: 'Appointment process was smooth, and waiting time was reasonable.', full: ' Staff guided me politely, and the doctor gave practical advice with clear medicine instructions. Overall, a dependable experience.' },
-  { initials: 'FP', bg: 'from-rose-500 to-rose-600', cardBg: 'from-rose-50', name: 'Farzana Parvin', short: 'Excellent maternal care and supportive nursing staff throughout.', full: ' The doctors checked in regularly, answered questions patiently, and ensured comfort before and after procedures.' },
-]
+// const testimonials = [
+//   { initials: 'AH', bg: 'from-blue-800 to-sky-500', cardBg: 'from-blue-50', name: 'Abdul Hamid', short: 'Excellent hospital with caring staff and very professional doctors.', full: ' The facilities are modern, and the care quality was consistently high from admission to discharge. Highly recommended for trusted healthcare.' },
+//   { initials: 'RB', bg: 'from-emerald-500 to-emerald-600', cardBg: 'from-green-50', name: 'Rahima Begum', short: 'I received excellent care during my stay and felt supported.', full: ' The nursing team was attentive, and doctors explained each step clearly so my family and I stayed confident throughout treatment.' },
+//   { initials: 'MK', bg: 'from-purple-500 to-purple-600', cardBg: 'from-purple-50', name: 'Mahmud Khan', short: 'Top-notch medical facility with advanced equipment and fast service.', full: ' The emergency department handled my case quickly, and follow-up care was just as good. I am grateful for their professionalism.' },
+//   { initials: 'SN', bg: 'from-cyan-500 to-cyan-600', cardBg: 'from-cyan-50', name: 'Shila Nasrin', short: 'Clean environment and excellent diagnostics at AMZ Hospital.', full: ' My reports were delivered quickly, and consultation was clear and reassuring. The whole process felt organized and patient-friendly.' },
+//   { initials: 'TU', bg: 'from-amber-500 to-amber-600', cardBg: 'from-amber-50', name: 'Tanvir Uddin', short: 'Appointment process was smooth, and waiting time was reasonable.', full: ' Staff guided me politely, and the doctor gave practical advice with clear medicine instructions. Overall, a dependable experience.' },
+//   { initials: 'FP', bg: 'from-rose-500 to-rose-600', cardBg: 'from-rose-50', name: 'Farzana Parvin', short: 'Excellent maternal care and supportive nursing staff throughout.', full: ' The doctors checked in regularly, answered questions patiently, and ensured comfort before and after procedures.' },
+// ]
 
 const stats = [
   { target: 300000, label: 'Patients Treated' },
@@ -212,7 +213,7 @@ useScrollReveal()
     <GallerySection :items="props.galleries" />
     <HealthPackages :packages="packages" />
     <AppointmentSection :available-weekdays="appointmentAvailableWeekdays" :blocked-dates="appointmentBlockedDates" />
-    <TestimonialsSection :testimonials="testimonials" />
+    <TestimonialsSection :reviews="props.reviews" />
     <StatsCounter :stats="stats" />
     <BlogSection :posts="props.blogs" />
     <NewsletterPartners :partners="partners" />

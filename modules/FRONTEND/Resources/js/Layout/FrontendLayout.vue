@@ -38,7 +38,7 @@ defineOptions({ name: 'FrontendLayout' })
                         </a>
                         <div class="flex items-center">
                             <i class="fas fa-clock mr-2"></i>
-                            <span>Open 24/7 - Always Here For You</span>
+                            <span>Open 24/7 - Always Here For You </span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">

@@ -71,11 +71,11 @@
               <div class="grid grid-cols-2 gap-2.5">
                 <div class="bg-slate-50/90 border border-slate-100 px-4 py-3 rounded-2xl flex flex-col gap-0.5 shadow-sm">
                   <span class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.12em]">Consultation</span>
-                  <span class="text-sm font-bold text-slate-900">?{{ doctor.visit_fee }}</span>
+                  <span class="text-sm font-bold text-slate-900">{{ doctor.visit_fee }}</span>
                 </div>
                 <div v-if="doctor.report_fee" class="bg-amber-50/70 border border-amber-100 px-4 py-3 rounded-2xl flex flex-col gap-0.5 shadow-sm">
                   <span class="text-[9px] font-bold text-amber-600/80 uppercase tracking-[0.12em]">Report Review</span>
-                  <span class="text-sm font-bold text-amber-700">?{{ doctor.report_fee }}</span>
+                  <span class="text-sm font-bold text-amber-700">{{ doctor.report_fee }}</span>
                 </div>
               </div>
 
@@ -114,7 +114,7 @@
               </div>
               <div class="flex items-start justify-between gap-3 pt-3.5 border-t border-slate-100">
                 <dt class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] pt-0.5">Fee Due</dt>
-                <dd class="text-base font-bold text-slate-900">?{{ doctor.visit_fee }}</dd>
+                <dd class="text-base font-bold text-slate-900">{{ doctor.visit_fee }}</dd>
               </div>
             </dl>
           </div>

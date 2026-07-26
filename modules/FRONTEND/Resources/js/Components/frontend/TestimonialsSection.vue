@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 const props = defineProps<{
-  testimonials: Array<{
+  reviews?: Array<{
     initials: string
     bg: string
     cardBg: string
@@ -12,10 +12,15 @@ const props = defineProps<{
   }>
 }>()
 
-const expanded = ref<Record<number, boolean>>({})
-const toggle = (i: number) => { expanded.value[i] = !expanded.value[i] }
+const expanded = ref<Record<string, boolean>>({})
+const toggle = (uniqueKey: string) => { 
+  expanded.value[uniqueKey] = !expanded.value[uniqueKey] 
+}
 
-const doubled = [...props.testimonials, ...props.testimonials]
+// Safely fallback to an empty array if props.reviews is undefined
+const doubled = [...(props.reviews || []), ...(props.reviews || [])]
+
+console.log(doubled)
 </script>
 
 <template>
@@ -45,10 +50,10 @@ const doubled = [...props.testimonials, ...props.testimonials]
             </div>
             <p class="text-gray-600 italic">
               {{ t.short }}
-              <span v-if="expanded[i]">{{ t.full }}</span>
+              <span v-if="expanded[`${t.name}-${i}`]">{{ t.full }}</span>
             </p>
-            <button @click="toggle(i)" class="mt-4 text-sm font-semibold text-blue-800 hover:text-sky-500">
-              {{ expanded[i] ? 'Show less' : 'Read more' }}
+            <button v-if="t.full" @click="toggle(`${t.name}-${i}`)" class="mt-4 text-sm font-semibold text-blue-800 hover:text-sky-500">
+              {{ expanded[`${t.name}-${i}`] ? 'Show less' : 'Read more' }}
             </button>
           </article>
         </div>
