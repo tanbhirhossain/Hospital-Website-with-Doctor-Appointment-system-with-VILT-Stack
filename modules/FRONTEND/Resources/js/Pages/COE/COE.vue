@@ -1,5 +1,16 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            title="Centers of Excellence"
+            description="Explore AMZ Hospital Centers of Excellence in Dhaka for advanced specialist care, multidisciplinary teams, and modern treatment facilities."
+            keywords="centers of excellence hospital, specialist care Dhaka, AMZ Hospital COE, advanced healthcare Bangladesh, medical excellence"
+            canonical="/center-of-excellence"
+            image="https://amzhospitalbd.com/storage/AMZ.jpg"
+            image-alt="AMZ Hospital Centers of Excellence"
+            schema-type="CollectionPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Centers of Excellence', url: '/center-of-excellence' }]"
+            :structured-data="{ '@type': 'ItemList', name: 'AMZ Hospital Centers of Excellence', itemListElement: (coes || []).map((coe, index) => ({ '@type': 'ListItem', position: index + 1, name: coe.name, url: coe.href || `/center-of-excellence/${coe.slug}` })) }"
+        />
                 <!-- Premium Dual-Tone Hero Header Section -->
         <section class="relative w-full bg-slate-950 overflow-hidden border-b border-slate-900 py-16 md:py-28">
             <div class="container mx-auto px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-12">
@@ -135,6 +146,7 @@
 
 <script setup>
     import FrontendLayout from '../../Layout/FrontendLayout.vue';
+    import SeoHead from '../../Components/SeoHead.vue';
     import { ref } from 'vue';
 
 

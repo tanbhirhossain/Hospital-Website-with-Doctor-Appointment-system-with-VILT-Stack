@@ -1,5 +1,23 @@
 <template>
   <FrontendLayout>
+    <SeoHead
+      :title="blog?.meta_title || blog?.name || 'Health Article'"
+      :description="blog?.meta_description || blog?.descriptions || `Read ${blog?.name || 'this health article'} from AMZ Hospital specialists.`"
+      :keywords="[blog?.name, blog?.department?.name, 'health article', 'AMZ Hospital blog', 'medical advice Bangladesh'].filter(Boolean)"
+      :canonical="blog?.canonical_url || blog?.href"
+      type="article"
+      :image="blog?.og_image_url || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+      :image-alt="blog?.name || 'AMZ Hospital health article'"
+      :author="blog?.creator?.name || 'AMZ Hospital'"
+      :published-time="blog?.created_at"
+      :modified-time="blog?.updated_at || blog?.created_at"
+      :section="blog?.department?.name"
+      :tags="[blog?.department?.name, blog?.name, 'healthcare'].filter(Boolean)"
+      :noindex="blog?.is_indexable === false"
+      schema-type="MedicalScholarlyArticle"
+      :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Blogs', url: '/blogs' }, { name: blog?.name || 'Article', url: blog?.href }]"
+      :structured-data="{ '@type': 'Article', headline: blog?.name, description: blog?.meta_description || blog?.descriptions, image: blog?.og_image_url, author: { '@type': 'Person', name: blog?.creator?.name || 'AMZ Hospital' }, publisher: { '@type': 'Organization', name: 'AMZ Hospital' }, datePublished: blog?.created_at, dateModified: blog?.updated_at || blog?.created_at, articleSection: blog?.department?.name }"
+    />
     <article class="py-16 bg-white">
       <!-- Article Header -->
       <header class="mx-auto max-w-3xl px-4 text-center mb-12">
@@ -57,6 +75,7 @@
 
 <script setup>
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 defineProps({
   blog: Object
 });

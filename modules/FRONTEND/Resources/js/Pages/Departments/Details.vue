@@ -1,5 +1,21 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            :title="currentDepartment?.meta_title || currentDepartment?.og_title || currentDepartment?.name || 'Medical Department'"
+            :description="currentDepartment?.meta_description || currentDepartment?.og_description || currentDepartment?.striped_desc || currentDepartment?.shortDesc || currentDepartment?.descriptions || `Learn about ${currentDepartment?.name || 'this medical department'} at AMZ Hospital.`"
+            :keywords="[currentDepartment?.name, currentDepartment?.tagline, 'hospital department', 'AMZ Hospital', 'specialist doctors Dhaka'].filter(Boolean)"
+            :canonical="currentDepartment?.canonical_url || (currentDepartment?.slug ? `/departments/${currentDepartment.slug}` : undefined)"
+            type="article"
+            :image="currentDepartment?.banner_url || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+            :image-alt="currentDepartment?.name || 'AMZ Hospital department'"
+            :noindex="currentDepartment?.indexable === false"
+            :published-time="currentDepartment?.created_at"
+            :modified-time="currentDepartment?.updated_at || currentDepartment?.created_at"
+            :section="'Departments'"
+            :tags="[currentDepartment?.name, 'medical department', 'specialist care'].filter(Boolean)"
+            schema-type="MedicalWebPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Departments', url: '/departments' }, { name: currentDepartment?.name || 'Department', url: currentDepartment?.slug ? `/departments/${currentDepartment.slug}` : undefined }]"
+        />
         <!-- 🎨 REFACTORED ULTRA-PREMIUM CLEAN BANNER HERO SECTION -->
         <section 
             class="relative w-full border-b border-slate-200 py-20 md:py-24 flex items-center transition-all duration-500 overflow-hidden"
@@ -217,6 +233,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 import AppointmentBookingWizard from '../../Components/frontend/AppointmentBookingWizard2.vue';
 
 const props = defineProps({

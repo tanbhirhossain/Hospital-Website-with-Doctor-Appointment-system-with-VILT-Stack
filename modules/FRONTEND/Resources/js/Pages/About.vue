@@ -1,5 +1,15 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            title="About AMZ Hospital"
+            description="Learn about AMZ Hospital in Dhaka, our specialist healthcare team, patient-first values, modern medical technology, and commitment to safe 24/7 care."
+            keywords="AMZ Hospital about, hospital in Dhaka, trusted healthcare Bangladesh, specialist hospital, 24/7 hospital Dhaka"
+            canonical="/about"
+            image="https://amzhospitalbd.com/storage/AMZ.jpg"
+            image-alt="AMZ Hospital building and healthcare team"
+            schema-type="AboutPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'About', url: '/about' }]"
+        />
         <!-- Full-Width Cinematic Video-Movement Banner Placed Directly Against the Navbar -->
         <section class="relative w-full overflow-hidden bg-slate-950 group">
             <!-- Video Movement Motion Banner Container -->
@@ -177,6 +187,7 @@
 
 <script setup>
     import FrontendLayout from '../Layout/FrontendLayout.vue';
+    import SeoHead from '../Components/SeoHead.vue';
 </script>
 
 <style scoped>

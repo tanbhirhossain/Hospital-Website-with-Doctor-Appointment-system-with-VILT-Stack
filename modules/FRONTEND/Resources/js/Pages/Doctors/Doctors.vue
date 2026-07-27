@@ -1,5 +1,16 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            title="Find Specialist Doctors"
+            description="Find AMZ Hospital specialist doctors in Dhaka by department, specialty, qualifications, and appointment availability for trusted consultation."
+            keywords="doctors in Dhaka, specialist doctors Bangladesh, AMZ Hospital doctors, doctor appointment, consultant physician Dhaka"
+            canonical="/doctors"
+            image="https://amzhospitalbd.com/storage/AMZ.jpg"
+            image-alt="AMZ Hospital specialist doctors"
+            schema-type="CollectionPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Doctors', url: '/doctors' }]"
+            :structured-data="{ '@type': 'ItemList', name: 'AMZ Hospital Specialist Doctors', itemListElement: (doctors || []).map((doctor, index) => ({ '@type': 'ListItem', position: index + 1, name: doctor.name, url: doctor.href || `/doctors/${doctor.slug}` })) }"
+        />
         
         <section class="relative w-full bg-slate-950 overflow-hidden border-b border-slate-900 py-16 md:py-28">
             <div class="container mx-auto px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-12">
@@ -243,6 +254,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 
 const props = defineProps({
     doctors: {

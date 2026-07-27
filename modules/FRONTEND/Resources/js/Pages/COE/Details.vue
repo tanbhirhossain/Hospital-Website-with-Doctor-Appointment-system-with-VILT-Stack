@@ -1,5 +1,21 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            :title="coe?.meta_title || coe?.og_title || coe?.name || 'Center of Excellence'"
+            :description="coe?.meta_description || coe?.og_description || coe?.striped_desc || coe?.description || `Learn about ${coe?.name || 'our center of excellence'} at AMZ Hospital.`"
+            :keywords="[coe?.name, 'center of excellence', 'AMZ Hospital', 'specialist care Dhaka', 'advanced treatment'].filter(Boolean)"
+            :canonical="coe?.canonical_url || (coe?.slug ? `/center-of-excellence/${coe.slug}` : undefined)"
+            type="article"
+            :image="coe?.banner_url || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+            :image-alt="coe?.name || 'AMZ Hospital Center of Excellence'"
+            :noindex="coe?.indexable === false"
+            :published-time="coe?.created_at"
+            :modified-time="coe?.updated_at || coe?.created_at"
+            :section="'Centers of Excellence'"
+            :tags="[coe?.name, 'medical excellence', 'specialist care'].filter(Boolean)"
+            schema-type="MedicalWebPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Centers of Excellence', url: '/center-of-excellence' }, { name: coe?.name || 'Details', url: coe?.slug ? `/center-of-excellence/${coe.slug}` : undefined }]"
+        />
         <!-- 🎥 CINEMATIC HERO SECTION -->
         <section 
             class="relative w-full border-b border-slate-200 py-20 md:py-24 flex items-center transition-all duration-500 overflow-hidden hero-section"
@@ -99,6 +115,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 
 const props = defineProps({
     coe: { type: Object, required: true },

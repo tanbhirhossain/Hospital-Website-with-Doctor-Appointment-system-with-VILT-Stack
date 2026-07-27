@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppointmentBookingWizard from '../components/frontend/AppointmentBookingWizard.vue'
 import FrontendLayout from '../Layout/FrontendLayout.vue';
+import SeoHead from '../Components/SeoHead.vue';
 
 defineProps<{
   availableWeekdays: number[]
@@ -10,6 +11,16 @@ defineProps<{
 
 <template>
 <FrontendLayout>
+    <SeoHead
+      title="Book Doctor Appointment Online"
+      description="Book an appointment with AMZ Hospital specialist doctors in Dhaka. Choose a date, select available slots, and get fast appointment support for trusted medical care."
+      keywords="doctor appointment Dhaka, online doctor booking, AMZ Hospital appointment, specialist consultation, hospital appointment Bangladesh"
+      canonical="/appointment"
+      image="https://amzhospitalbd.com/storage/AMZ.jpg"
+      image-alt="Book doctor appointment at AMZ Hospital"
+      schema-type="MedicalWebPage"
+      :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Appointment', url: '/appointment' }]"
+    />
   <section id="appointment" role="region" aria-label="Book appointment" class="py-20 bg-gradient-to-br from-blue-800 to-sky-500 text-white relative overflow-hidden premium-shine-section scroll-reveal reveal-appointment fade-in-0 zoom-in-95 duration-700">
     <div class="absolute inset-0 opacity-10">
       <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>

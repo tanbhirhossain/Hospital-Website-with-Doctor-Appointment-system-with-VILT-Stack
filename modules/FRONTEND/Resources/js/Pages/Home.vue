@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineOptions, computed } from 'vue'
 import FrontendLayout from '../Layout/FrontendLayout.vue'
+import SeoHead from '../Components/SeoHead.vue'
 
 
 // Import our new section components (adjust path if your folder is 'Components/frontend/')
@@ -201,6 +202,18 @@ useScrollReveal()
 
 <template>
   <main>
+    <SeoHead
+      title="AMZ Hospital Dhaka | Specialist Doctors, Departments & Online Appointments"
+      description="AMZ Hospital in Dhaka offers specialist doctors, centers of excellence, emergency care, diagnostics, health packages, and easy online appointment booking."
+      keywords="AMZ Hospital, hospital in Dhaka, doctor appointment Dhaka, specialist doctors Bangladesh, emergency hospital, diagnostics Dhaka"
+      canonical="/"
+      type="website"
+      image="https://amzhospitalbd.com/storage/AMZ.jpg"
+      image-alt="AMZ Hospital Dhaka healthcare and doctor appointment services"
+      schema-type="MedicalWebPage"
+      :breadcrumbs="[{ name: 'Home', url: '/' }]"
+      :structured-data="{ '@type': 'ItemList', name: 'Featured AMZ Hospital Doctors and Departments', itemListElement: [...(props.departments || []).slice(0, 6).map((department, index) => ({ '@type': 'ListItem', position: index + 1, name: department.name, url: department.href || `/departments/${department.slug}` })), ...(doctors || []).slice(0, 6).map((doctor, index) => ({ '@type': 'ListItem', position: index + 7, name: doctor.name, url: doctor.href || `/doctors/${doctor.slug}` }))] }"
+    />
     <HeroSlider :slides="props.slides" />
     <QuickAccessCards :cards="quickCards" />
     <AboutSection />

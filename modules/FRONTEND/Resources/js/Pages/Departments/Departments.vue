@@ -1,5 +1,16 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            title="Medical Departments"
+            description="Explore AMZ Hospital medical departments in Dhaka, including specialist consultation, diagnostics, treatment services, and patient-centered care."
+            keywords="hospital departments Dhaka, AMZ Hospital departments, medical specialists Bangladesh, healthcare services, specialist departments"
+            canonical="/departments"
+            image="https://amzhospitalbd.com/storage/AMZ.jpg"
+            image-alt="AMZ Hospital medical departments"
+            schema-type="CollectionPage"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Departments', url: '/departments' }]"
+            :structured-data="{ '@type': 'ItemList', name: 'AMZ Hospital Medical Departments', itemListElement: (departments || []).map((department, index) => ({ '@type': 'ListItem', position: index + 1, name: department.name, url: department.href || `/departments/${department.slug}` })) }"
+        />
         <!-- Premium Dual-Tone Hero Header Section -->
         <section class="relative w-full bg-slate-950 overflow-hidden border-b border-slate-900 py-16 md:py-28">
             <div class="container mx-auto px-6 md:px-12 relative z-10 flex flex-col lg:flex-row items-center gap-12">
@@ -134,6 +145,7 @@
 
 <script setup>
     import FrontendLayout from '../../Layout/FrontendLayout.vue';
+    import SeoHead from '../../Components/SeoHead.vue';
 
     defineProps({
         departments: Array

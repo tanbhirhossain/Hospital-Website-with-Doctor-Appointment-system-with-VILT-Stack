@@ -43,11 +43,11 @@ defineOptions({ name: 'FrontendLayout' })
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm">Follow Us:</span>
-                        <a href="#" class="hover:text-sky-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="hover:text-sky-400 transition-colors"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="hover:text-sky-400 transition-colors"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="hover:text-sky-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="hover:text-sky-400 transition-colors"><i class="fab fa-youtube"></i></a>
+                        <a href="https://facebook.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://twitter.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-instagram"></i></a>
+                        <a href="https://linkedin.com/company/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://www.youtube.com/@amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
             </div>

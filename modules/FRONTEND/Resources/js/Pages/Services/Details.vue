@@ -1,5 +1,22 @@
 <template>
     <FrontendLayout>
+        <SeoHead
+            :title="service?.meta_title || service?.title || 'Hospital Service'"
+            :description="service?.meta_description || service?.short_description || service?.description || `Learn about ${service?.title || 'this hospital service'} at AMZ Hospital.`"
+            :keywords="[service?.title, 'hospital service', 'AMZ Hospital', 'medical service Dhaka', 'healthcare Bangladesh'].filter(Boolean)"
+            :canonical="service?.canonical_url || (service?.slug ? `/services/${service.slug}` : undefined)"
+            type="article"
+            :image="service?.banner_url || service?.thumbnail_url || service?.image_url || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+            :image-alt="service?.title || 'AMZ Hospital service'"
+            :noindex="service?.indexable === false"
+            :published-time="service?.created_at"
+            :modified-time="service?.updated_at || service?.created_at"
+            :section="'Services'"
+            :tags="[service?.title, 'medical service', 'hospital service'].filter(Boolean)"
+            schema-type="MedicalProcedure"
+            :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Services', url: '/services' }, { name: service?.title || 'Service', url: service?.slug ? `/services/${service.slug}` : undefined }]"
+            :structured-data="{ '@type': 'MedicalProcedure', name: service?.title, description: service?.short_description || service?.description, image: service?.banner_url || service?.thumbnail_url || service?.image_url, provider: { '@type': 'Hospital', name: 'AMZ Hospital' } }"
+        />
         <!-- HERO SECTION -->
         <section
             class="relative w-full border-b border-slate-200 py-20 md:py-24 flex items-center transition-all duration-500 overflow-hidden hero-section"
@@ -296,6 +313,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 
 const props = defineProps({
     service: { type: Object, required: true },

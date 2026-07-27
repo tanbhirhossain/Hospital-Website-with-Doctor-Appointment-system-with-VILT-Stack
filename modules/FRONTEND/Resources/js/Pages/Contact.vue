@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import FrontendLayout from '../Layout/FrontendLayout.vue'
+import SeoHead from '../Components/SeoHead.vue'
 
 const props = defineProps<{
   contact: {
@@ -45,7 +46,17 @@ const departments = [
 
 <template>
   <FrontendLayout>
-    <Head title="Contact AMZ Hospital" />
+    <SeoHead
+      title="Contact AMZ Hospital"
+      description="Contact AMZ Hospital in Dhaka for emergency support, appointments, hospital information, service inquiries, and patient assistance."
+      keywords="contact AMZ Hospital, hospital phone Dhaka, emergency hotline Bangladesh, AMZ Hospital address, appointment help"
+      canonical="/contact"
+      image="https://amzhospitalbd.com/storage/AMZ.jpg"
+      image-alt="Contact AMZ Hospital Dhaka"
+      schema-type="ContactPage"
+      :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Contact', url: '/contact' }]"
+      :structured-data="{ '@type': 'ContactPage', name: 'Contact AMZ Hospital', mainEntity: { '@type': 'Hospital', name: 'AMZ Hospital', telephone: contact?.phone, email: contact?.email, address: contact?.address } }"
+    />
 
     <!-- Premium Cinematic Hero Banner -->
     <section class="relative overflow-hidden bg-slate-950 py-28 text-white sm:py-36">

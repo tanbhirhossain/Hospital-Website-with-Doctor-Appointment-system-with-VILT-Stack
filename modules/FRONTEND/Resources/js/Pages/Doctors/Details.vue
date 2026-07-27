@@ -1,5 +1,22 @@
 <template>
   <FrontendLayout>
+    <SeoHead
+      :title="doctor?.meta_title || doctor?.name || 'Doctor Profile'"
+      :description="doctor?.meta_description || doctor?.biography || `${doctor?.name || 'AMZ Hospital doctor'} - ${doctor?.specialty || doctor?.designation || 'specialist doctor'} at AMZ Hospital, Dhaka.`"
+      :keywords="[doctor?.name, doctor?.specialty, doctor?.designation, doctor?.department?.name, 'doctor appointment Dhaka', 'AMZ Hospital doctor'].filter(Boolean)"
+      :canonical="doctor?.canonical_url || (doctor?.slug ? `/doctors/${doctor.slug}` : undefined)"
+      type="profile"
+      :image="doctor?.profile_image_url || 'https://amzhospitalbd.com/storage/AMZ.jpg'"
+      :image-alt="doctor?.name || 'AMZ Hospital doctor profile'"
+      :noindex="doctor?.indexable === false"
+      :published-time="doctor?.created_at"
+      :modified-time="doctor?.updated_at || doctor?.created_at"
+      :section="doctor?.department?.name || 'Doctors'"
+      :tags="[doctor?.name, doctor?.specialty, doctor?.department?.name, 'doctor'].filter(Boolean)"
+      schema-type="ProfilePage"
+      :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Doctors', url: '/doctors' }, { name: doctor?.name || 'Doctor', url: doctor?.slug ? `/doctors/${doctor.slug}` : undefined }]"
+      :structured-data="{ '@type': 'Physician', name: doctor?.name, image: doctor?.profile_image_url, medicalSpecialty: doctor?.specialty || doctor?.department?.name, jobTitle: doctor?.designation, affiliation: { '@type': 'Hospital', name: 'AMZ Hospital' }, worksFor: { '@type': 'Hospital', name: 'AMZ Hospital' }, email: doctor?.email, telephone: doctor?.phone, url: doctor?.slug ? `/doctors/${doctor.slug}` : undefined }"
+    />
     <div class="min-h-screen text-slate-800 relative overflow-hidden font-sans antialiased pb-24 selection:bg-blue-600/10 selection:text-blue-800 bg-[#F7F9FB]">
 
       <!-- Background Decorative Elements -->
@@ -427,6 +444,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'; // 🆕 added onMounted, nextTick (already present)
 import { Link } from '@inertiajs/vue3';
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 import axios from 'axios';
 
 const props = defineProps({

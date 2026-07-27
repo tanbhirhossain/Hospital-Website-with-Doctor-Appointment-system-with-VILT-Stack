@@ -1,5 +1,17 @@
 <template>
   <FrontendLayout>
+    <SeoHead
+      title="Health Blog & Medical Insights"
+      description="Read the latest health insights, wellness advice, disease prevention guides, and evidence-based medical articles from AMZ Hospital specialists."
+      keywords="health blog Bangladesh, medical articles Dhaka, wellness advice, AMZ Hospital blog, doctor health tips"
+      canonical="/blogs"
+      type="website"
+      image="https://amzhospitalbd.com/storage/AMZ.jpg"
+      image-alt="AMZ Hospital health blog and medical insights"
+      schema-type="CollectionPage"
+      :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Blogs', url: '/blogs' }]"
+      :structured-data="{ '@type': 'ItemList', name: 'Latest Health Insights', itemListElement: (blogs || []).map((post, index) => ({ '@type': 'ListItem', position: index + 1, name: post.name, url: post.href })) }"
+    />
     <section id="blog" role="region" aria-label="Latest blog posts" class="py-24 bg-slate-50">
       <div class="container mx-auto px-4">
         
@@ -74,6 +86,7 @@
 
 <script setup>
 import FrontendLayout from '../../Layout/FrontendLayout.vue';
+import SeoHead from '../../Components/SeoHead.vue';
 
 defineProps({
   blogs: Array
