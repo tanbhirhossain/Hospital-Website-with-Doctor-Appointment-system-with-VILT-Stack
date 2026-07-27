@@ -1,0 +1,22 @@
+name: Deploy Website to cPanel
+
+on:
+  push:
+    branches:
+      - feature/website-update  # আপনার ব্রাঞ্চের নাম master হলে এখানে master লিখবেন
+
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest code
+      uses: actions/checkout@v4
+    
+    - name: Sync files to cPanel
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: dev.amzhospitalbd.com/github-update/  # cPanel-এর যে ফোল্ডারে কোড রাখতে চান (যেমন: public_html/)
