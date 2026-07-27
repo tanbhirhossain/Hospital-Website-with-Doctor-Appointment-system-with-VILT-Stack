@@ -33,19 +33,5 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
     },
-    server: {
-        host: '0.0.0.0', 
-        port: 8009,
-        https: false, // 3. Force HTTPS protocol
-        hmr: {
-            host: '192.168.10.215',
-        },
-    },
-     cors: {
-        origin: 'https://amzhospitalbd.com', // Ensure this matches your HTTPS ERP URL
-        credentials: true,
-    },
-    headers: {
-        'Access-Control-Allow-Private-Network': 'true', 
-    },
+
 });
