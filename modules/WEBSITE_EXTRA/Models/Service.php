@@ -11,7 +11,7 @@ class Service extends Model implements HasMedia
     use InteractsWithMedia;
 
     protected $fillable = [
-        'title', 'slug', 'icon', 'short_description', 'description',
+        'title', 'slug', 'category', 'icon', 'short_description', 'description',
         'price', 'duration_minutes', 'sort_order', 'is_active',
         'is_featured', 'meta_title', 'meta_description', 'indexable',
         'created_by', 'updated_by'

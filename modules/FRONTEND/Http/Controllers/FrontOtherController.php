@@ -9,24 +9,35 @@ use Inertia\Response;
 use Modules\WEBSITE_EXTRA\Http\Requests\StoreContactMessageRequest;
 use Modules\WEBSITE_EXTRA\Models\ContactMessage;
 use Modules\WEBSITE_EXTRA\Services\ContactMessageService;
+use Modules\SITE_SETTINGS\Services\FrontendSiteSettingsService;
 
 class FrontOtherController extends Controller
 {
+    public function __construct(
+        private readonly FrontendSiteSettingsService $siteSettingsService,
+    ) {}
+
     public function about(): Response
     {
-        return Inertia::render('FRONTEND::About');
+        $shared = $this->siteSettingsService->sharedFrontendData();
+        $aboutData = $this->siteSettingsService->aboutPageData();
+
+        return Inertia::render('FRONTEND::About', array_merge($shared, $aboutData));
     }
 
     public function contact(): Response
     {
-        return Inertia::render('FRONTEND::Contact', [
+        $shared = $this->siteSettingsService->sharedFrontendData();
+        $contactData = $this->siteSettingsService->contactPageData();
+
+        return Inertia::render('FRONTEND::Contact', array_merge($shared, $contactData, [
             'contact' => [
-                'email' => 'info@amzhospitalbd.com',
-                'phone' => '+880 184 733 1047',
-                'hotline' => '10699',
-                'address' => 'Cha-80/3, Shadhinota Sarani, Progati Sarani Road, Uttar Badda, Dhaka-1212',
+                'email' => $contactData['contact_info']['email_primary'] ?? 'info@amzhospitalbd.com',
+                'phone' => $contactData['contact_info']['phone_primary'] ?? '+880 184 733 1047',
+                'hotline' => $contactData['contact_info']['hotline'] ?? '10699',
+                'address' => $contactData['contact_info']['address'] ?? 'Cha-80/3, Shadhinota Sarani, Progati Sarani Road, Uttar Badda, Dhaka-1212',
             ],
-        ]);
+        ]));
     }
 
     public function storeContact(StoreContactMessageRequest $request, ContactMessageService $messages): RedirectResponse

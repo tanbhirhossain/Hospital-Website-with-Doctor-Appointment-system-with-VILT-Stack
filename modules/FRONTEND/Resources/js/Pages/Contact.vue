@@ -11,11 +11,22 @@ const props = defineProps<{
     hotline: string
     address: string
   }
+  contact_page?: { title?: string; content?: string; map_embed?: string } | null
+  contact_info?: { phone_primary?: string; phone_secondary?: string; email_primary?: string; email_secondary?: string; hotline?: string; address?: string; city?: string } | null
 }>()
 
 const page = usePage()
 const flashSuccess = computed(() => (page.props as any).flash?.success)
 const flashWarning = computed(() => (page.props as any).flash?.warning)
+
+// Dynamic contact data with fallbacks
+const contactPageData = computed(() => props.contact_page || {})
+const contactInfoData = computed(() => props.contact_info || {})
+const displayPhone = computed(() => contactInfoData.value.phone_primary || props.contact?.phone || '+880 184 733 1047')
+const displayEmail = computed(() => contactInfoData.value.email_primary || props.contact?.email || 'info@amzhospitalbd.com')
+const displayHotline = computed(() => contactInfoData.value.hotline || props.contact?.hotline || '10699')
+const displayAddress = computed(() => contactInfoData.value.address || props.contact?.address || 'Cha-80/3, Shadhinota Sarani, Progati Sarani Road, Uttar Badda, Dhaka-1212')
+const mapEmbedCode = computed(() => contactPageData.value.map_embed || null)
 
 const form = useForm({
   name: '',
@@ -104,8 +115,9 @@ const departments = [
               <span class="size-2 rounded-full bg-emerald-500"></span>
               Contact AMZ Hospital
             </div>
-            <h2 class="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">We are here for your healthcare needs</h2>
-            <p class="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+            <h2 class="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">{{ contactPageData.title || 'We are here for your healthcare needs' }}</h2>
+            <p v-if="contactPageData.content" class="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600" v-html="contactPageData.content"></p>
+            <p v-else class="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
               Send your question, appointment request, or service inquiry. Your message will be saved securely and our team will receive an email immediately. You will also receive a confirmation copy.
             </p>
           </div>
@@ -118,28 +130,33 @@ const departments = [
                 <h3 class="mt-3 text-3xl font-black">Reach the right desk faster</h3>
                 <p class="mt-3 text-sm leading-7 text-blue-50">For emergencies please call the hotline directly. For all other inquiries, submit the form and we will respond as soon as possible.</p>
                 <div class="mt-8 grid gap-3">
-                  <a :href="`tel:${contact.hotline}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
+                  <a :href="`tel:${displayHotline}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
                     <span class="block text-xs font-bold uppercase tracking-wider text-cyan-100">Emergency Hotline</span>
-                    <span class="mt-1 block text-2xl font-black">{{ contact.hotline }}</span>
+                    <span class="mt-1 block text-2xl font-black">{{ displayHotline }}</span>
                   </a>
-                  <a :href="`tel:${contact.phone}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
+                  <a :href="`tel:${displayPhone}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
                     <span class="block text-xs font-bold uppercase tracking-wider text-cyan-100">Phone</span>
-                    <span class="mt-1 block text-xl font-black">{{ contact.phone }}</span>
+                    <span class="mt-1 block text-xl font-black">{{ displayPhone }}</span>
                   </a>
-                  <a :href="`mailto:${contact.email}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
+                  <a :href="`mailto:${displayEmail}`" class="rounded-2xl bg-white/15 p-4 backdrop-blur transition hover:bg-white/25">
                     <span class="block text-xs font-bold uppercase tracking-wider text-cyan-100">Email</span>
-                    <span class="mt-1 block break-all text-lg font-black">{{ contact.email }}</span>
+                    <span class="mt-1 block break-all text-lg font-black">{{ displayEmail }}</span>
                   </a>
                 </div>
               </div>
 
               <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50">
                 <h3 class="text-xl font-black text-slate-950">Visit AMZ</h3>
-                <p class="mt-3 text-sm leading-7 text-slate-600">{{ contact.address }}</p>
+                <p class="mt-3 text-sm leading-7 text-slate-600">{{ displayAddress }}</p>
                 <div class="mt-5 overflow-hidden rounded-3xl border border-slate-200 shadow-lg">
-                  <iframe
+                  <iframe v-if="mapEmbedCode"
+                    :srcdoc="mapEmbedCode"
+                    width="100%" height="260" style="border:0;" allowfullscreen loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                  </iframe>
+                  <iframe v-else
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d912.7411925766279!2d90.42537456963056!3d23.78426882587095!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c7af2fcf1c87%3A0x3c70327ba1b06ef7!2sAMZ%20Hospital%20Ltd.!5e0!3m2!1sen!2sbd!4v1773125024838!5m2!1sen!2sbd"
-                    width="100%" height="260" style="border:0;" :allowfullscreen="false" loading="lazy"
+                    width="100%" height="260" style="border:0;" allowfullscreen loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade">
                   </iframe>
                 </div>

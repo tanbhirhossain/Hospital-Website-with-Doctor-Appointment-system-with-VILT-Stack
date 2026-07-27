@@ -7,6 +7,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Modules\WEBSITE\Models\Department;
+use Modules\SITE_SETTINGS\Services\FrontendSiteSettingsService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -53,8 +54,8 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
             ],
             'navigation' => fn () => app(ModuleNavigation::class)->build($request),
-
-            'departments' => fn () => Department::where('isActive', 1)->orderBy('serial', 'asc')->get(['name', 'slug'])      
+            'departments' => fn () => Department::where('isActive', 1)->orderBy('serial', 'asc')->get(['name', 'slug']),
+            'site_settings' => fn () => app(FrontendSiteSettingsService::class)->sharedFrontendData()['site_settings'],      
                                     
             ]);
         

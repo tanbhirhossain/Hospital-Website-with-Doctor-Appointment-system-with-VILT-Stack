@@ -21,6 +21,7 @@ interface Svc {
     id: number;
     title: string;
     slug: string;
+    category: string | null;
     icon: string | null;
     short_description: string | null;
     description: string | null;
@@ -71,6 +72,7 @@ const form = useForm({
     _method: 'put',
     title: props.service.title,
     slug: props.service.slug,
+    category: props.service.category ?? '',
     icon: props.service.icon ?? '',
     short_description: props.service.short_description ?? '',
     description: props.service.description ?? '',
@@ -172,6 +174,10 @@ const submit = () => form.post(route('admin.services.update', props.service.id),
                                 <div>
                                     <Label>Slug</Label>
                                     <Input v-model="form.slug" class="mt-1" />
+                                </div>
+                                <div>
+                                    <Label>Category</Label>
+                                    <Input v-model="form.category" placeholder="e.g. Diagnostic, Surgical, Emergency..." class="mt-1" />
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-4">

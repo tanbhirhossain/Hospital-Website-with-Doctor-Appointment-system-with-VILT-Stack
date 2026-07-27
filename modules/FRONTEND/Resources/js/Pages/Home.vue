@@ -33,7 +33,93 @@ const props = defineProps({
   galleries: { type: Array, required: true }, 
   centers: {type: Array, required: true},
   doctors: {type: Array, required: true},
-  reviews: {type: Array, required: true}
+  reviews: {type: Array, required: true},
+  // Site Settings data from admin panel
+  site_settings: { type: Object, default: () => ({}) },
+  quick_cards: { type: Array, default: () => [] },
+  why_choose_items: { type: Array, default: () => [] },
+  corporate_partners: { type: Array, default: () => [] },
+  home_videos: { type: Array, default: () => [] },
+  navigation_menus: { type: Array, default: () => [] },
+  leadership: { type: Array, default: () => [] },
+})
+
+// ─── Dynamic data with fallbacks ───────────────────────────────────
+
+// Quick cards: use dynamic data from admin, fallback to hardcoded defaults
+const quickCards = computed(() => {
+  if (props.quick_cards && props.quick_cards.length > 0) {
+    return props.quick_cards.map(c => ({
+      gradient: c.gradient || 'from-blue-500 to-blue-600',
+      icon: c.icon || 'fa-star',
+      title: c.title,
+      link: c.link || '#',
+    }))
+  }
+  return [
+    { gradient: 'from-[blue] to-[blue]', icon: 'fa-user-md', title: 'Find Doctor', link: '/doctors' },
+    { gradient: 'from-[#24a6db] to-[#5cc6e0]', icon: 'fa-calendar-check', title: 'Book an Appointment', link: '/appointment' },
+    { gradient: 'from-[#1fb18f] to-[#6dd8bc]', icon: 'fa-home', title: 'Home Sample Collection', link: 'https://www.amzhospitalbd.com/blood/home-collections' },
+    { gradient: 'from-[#dda229] to-[#efd56d]', icon: 'fa-file-medical', title: 'Online Lab Report', link: 'http://erp.amzhospitalbd.com/online-report/find' },
+    { gradient: 'from-[#e56775] to-[#ef8f9b]', icon: 'fa-map-marker-alt', title: 'Find Us', link: '#contact' },
+  ]
+})
+
+// Why Choose Us: dynamic items from admin, fallback to hardcoded
+const whyChooseUsFeatures = computed(() => {
+  if (props.why_choose_items && props.why_choose_items.length > 0) {
+    return props.why_choose_items.map(item => ({
+      color: item.gradient || `from-blue-500 to-blue-600`,
+      icon: item.icon || 'fa-award',
+      title: item.title,
+      desc: item.description || '',
+    }))
+  }
+  return [
+    { color: 'from-blue-500 to-blue-600', icon: 'fa-award', title: 'Trusted Outcomes', desc: 'Consistent treatment quality with strong clinical governance and senior specialist oversight.' },
+    { color: 'from-emerald-500 to-emerald-600', icon: 'fa-calendar-check', title: 'Fast Appointments', desc: 'Streamlined booking and coordinated scheduling to reduce waiting and delays.' },
+    { color: 'from-red-500 to-red-600', icon: 'fa-shield-heart', title: 'Patient Safety First', desc: 'Strict infection-control protocols, safety checklists, and monitored care pathways.' },
+    { color: 'from-purple-500 to-purple-600', icon: 'fa-comments', title: 'Clear Communication', desc: 'Doctors explain diagnosis and options in plain language before every key decision.' },
+    { color: 'from-yellow-500 to-yellow-600', icon: 'fa-file-waveform', title: 'Digital Reports', desc: 'Faster test report access and smoother follow-up through digital sharing workflows.' },
+    { color: 'from-pink-500 to-pink-600', icon: 'fa-people-roof', title: 'Family-Centered Support', desc: 'Care teams guide patients and families throughout treatment, discharge, and recovery.' },
+    { color: 'from-indigo-500 to-indigo-600', icon: 'fa-file-invoice-dollar', title: 'Transparent Billing', desc: 'Clear package details and cost visibility to avoid confusion during care.' },
+    { color: 'from-teal-500 to-teal-600', icon: 'fa-headset', title: '24/7 Help Desk', desc: 'Round-the-clock support for urgent guidance, admissions, and service coordination.' },
+  ]
+})
+
+// Corporate Partners: dynamic from admin, fallback to hardcoded
+const partners = computed(() => {
+  if (props.corporate_partners && props.corporate_partners.length > 0) {
+    return props.corporate_partners.map(p => ({
+      name: p.name,
+      logo: p.logo_url || '',
+    }))
+  }
+  return [
+    { name: 'AB Bank', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/9Y2oTmRomsnbfdh3cG50.png' },
+    { name: 'Ekushe TV', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/SLboYCDAU6ngOHkQ0TxA.png' },
+    { name: 'ICON', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/stFeEleAssgKAwC97aeC.png' },
+    { name: 'Brac', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/TtikDkxa6iYuaaMoRyBg.png' },
+    { name: 'Huwaei', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/9XfI0DamcAjt2JgjgV3T.png' },
+  ]
+})
+
+// About section data from admin
+const aboutData = computed(() => props.site_settings?.home_about || {})
+const whyChooseSectionData = computed(() => props.site_settings?.why_choose || {})
+const servicesSectionData = computed(() => props.site_settings?.services || {})
+const partnersSectionData = computed(() => props.site_settings?.partners || {})
+
+// Section order from admin (controls display order on homepage)
+const sectionOrder = computed(() => {
+  const order = props.site_settings?.section_order
+  if (order && Array.isArray(order) && order.length > 0) return order
+  return [
+    'hero_slider', 'quick_cards', 'about_us', 'about_videos', 'why_choose_us',
+    'departments', 'centers_of_excellence', 'healthcare_services', 'doctors',
+    'leadership', 'gallery', 'health_packages', 'appointment', 'testimonials',
+    'stats', 'blog', 'corporate_partners', 'contact',
+  ]
 })
 
 // MAPPING LOGIC: Transform backend data into the format GallerySection needs
@@ -60,15 +146,21 @@ const getBadgeColor = (categoryName?: string) => {
   return colors[categoryName || ''] || 'bg-gray-600'
 }
 
-const quickCards = [
-  { gradient: 'from-[blue] to-[blue]', icon: 'fa-user-md', title: 'Find Doctor', link: '/doctors' },
-  { gradient: 'from-[#24a6db] to-[#5cc6e0]', icon: 'fa-calendar-check', title: 'Book an Appointment', link: '/appointment' },
-  { gradient: 'from-[#1fb18f] to-[#6dd8bc]', icon: 'fa-home', title: 'Home Sample Collection', link: 'https://www.amzhospitalbd.com/blood/home-collections' },
-  { gradient: 'from-[#dda229] to-[#efd56d]', icon: 'fa-file-medical', title: 'Online Lab Report', link: 'http://erp.amzhospitalbd.com/online-report/find' },
-  { gradient: 'from-[#e56775] to-[#ef8f9b]', icon: 'fa-map-marker-alt', title: 'Find Us', link: '#contact' },
-]
-
-const leadershipMessages = [
+const leadershipMessages = computed(() => {
+  if (props.leadership && props.leadership.length > 0) {
+    return props.leadership.map(l => ({
+      name: l.name,
+      role: l.role || '',
+      roleLine: l.roleLine || l.role || '',
+      eyebrow: l.eyebrow || '',
+      title: l.title || '',
+      quote: l.quote || '',
+      credentials: Array.isArray(l.credentials) ? l.credentials : [],
+      photo: l.photo || '',
+      message: l.message || '',
+    }))
+  }
+  return [
   {
     name: 'Prof. Dr. Ahmedul Kabir',
     role: 'Chairman',
@@ -113,6 +205,7 @@ As CEO, my core objective is to drive continuous modernization of our hospital's
 We foster a culture of active empathy, continuous capacity building, and operational precision. Every protocol we implement is designed with a patient-first approach — guaranteeing demand-based treatment at an affordable cost, offering safety and comfort.`,
   },
 ]
+})
 
 // const galleryItems = [
 //   { category: 'infrastructure', img: 'https://amzhospitalbd.com/storage/AMZ.jpg?w=800&h=600&fit=crop', badge: 'Infrastructure', badgeColor: 'bg-blue-800', title: 'AMZ Hospital Building', desc: 'ISO-certified 100-bed multi-story facility in Uttar Badda.' },
@@ -174,24 +267,7 @@ const stats = [
   { target: 100, label: 'Hospital Beds' },
 ]
 
-const partners = [
-  { name: 'AB Bank', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/9Y2oTmRomsnbfdh3cG50.png' },
-  { name: 'Ekushe TV', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/SLboYCDAU6ngOHkQ0TxA.png' },
-  { name: 'ICON', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/stFeEleAssgKAwC97aeC.png' },
-  { name: 'Brac', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/TtikDkxa6iYuaaMoRyBg.png' },
-  { name: 'Huwaei', logo: 'https://amzhospitalbd.com/storage/corporate-partners/March2024/9XfI0DamcAjt2JgjgV3T.png' },
-]
-
-const whyChooseUsFeatures = [
-  { color: 'from-blue-500 to-blue-600', icon: 'fa-award', title: 'Trusted Outcomes', desc: 'Consistent treatment quality with strong clinical governance and senior specialist oversight.' },
-  { color: 'from-emerald-500 to-emerald-600', icon: 'fa-calendar-check', title: 'Fast Appointments', desc: 'Streamlined booking and coordinated scheduling to reduce waiting and delays.' },
-  { color: 'from-red-500 to-red-600', icon: 'fa-shield-heart', title: 'Patient Safety First', desc: 'Strict infection-control protocols, safety checklists, and monitored care pathways.' },
-  { color: 'from-purple-500 to-purple-600', icon: 'fa-comments', title: 'Clear Communication', desc: 'Doctors explain diagnosis and options in plain language before every key decision.' },
-  { color: 'from-yellow-500 to-yellow-600', icon: 'fa-file-waveform', title: 'Digital Reports', desc: 'Faster test report access and smoother follow-up through digital sharing workflows.' },
-  { color: 'from-pink-500 to-pink-600', icon: 'fa-people-roof', title: 'Family-Centered Support', desc: 'Care teams guide patients and families throughout treatment, discharge, and recovery.' },
-  { color: 'from-indigo-500 to-indigo-600', icon: 'fa-file-invoice-dollar', title: 'Transparent Billing', desc: 'Clear package details and cost visibility to avoid confusion during care.' },
-  { color: 'from-teal-500 to-teal-600', icon: 'fa-headset', title: '24/7 Help Desk', desc: 'Round-the-clock support for urgent guidance, admissions, and service coordination.' },
-]
+// partners and whyChooseUsFeatures are now computed props (see above)
 
 const appointmentAvailableWeekdays = [0, 1, 2, 3, 4, 6]
 const appointmentBlockedDates: string[] = []
@@ -214,23 +290,68 @@ useScrollReveal()
       :breadcrumbs="[{ name: 'Home', url: '/' }]"
       :structured-data="{ '@type': 'ItemList', name: 'Featured AMZ Hospital Doctors and Departments', itemListElement: [...(props.departments || []).slice(0, 6).map((department, index) => ({ '@type': 'ListItem', position: index + 1, name: department.name, url: department.href || `/departments/${department.slug}` })), ...(doctors || []).slice(0, 6).map((doctor, index) => ({ '@type': 'ListItem', position: index + 7, name: doctor.name, url: doctor.href || `/doctors/${doctor.slug}` }))] }"
     />
-    <HeroSlider :slides="props.slides" />
-    <QuickAccessCards :cards="quickCards" />
-    <AboutSection />
-    <WhyChooseUs :features="whyChooseUsFeatures" />
-    <DepartmentsSection :departments="props.departments" />
-    <CentersOfExcellence :centers="centers" />
-    <ServicesSection :services="servicesList" />
-    <DoctorsSection :doctors="doctors" />
-    <LeadershipSection :messages="leadershipMessages" />
-    <GallerySection :items="props.galleries" />
-    <HealthPackages :packages="packages" />
-    <AppointmentSection :available-weekdays="appointmentAvailableWeekdays" :blocked-dates="appointmentBlockedDates" />
-    <TestimonialsSection :reviews="props.reviews" />
-    <StatsCounter :stats="stats" />
-    <BlogSection :posts="props.blogs" />
-    <NewsletterPartners :partners="partners" />
-    <ContactSection />
+    <!-- Dynamic Section Order: Render sections based on admin-configured order -->
+    <template v-for="sectionKey in sectionOrder" :key="sectionKey">
+      <HeroSlider v-if="sectionKey === 'hero_slider'" :slides="props.slides" />
+      <QuickAccessCards v-if="sectionKey === 'quick_cards'" :cards="quickCards" />
+      <AboutSection v-if="sectionKey === 'about_us'"
+        :title="aboutData.title"
+        :content="aboutData.content"
+        :video-url="aboutData.video_url"
+        :image-url="aboutData.image_url" />
+      <!-- About Videos section -->
+      <section v-if="sectionKey === 'about_videos' && home_videos.length > 0" class="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
+        <div class="container mx-auto px-4">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{{ aboutData.title || 'Our Story in Video' }}</h2>
+          </div>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div v-for="video in home_videos" :key="video.id" class="rounded-2xl overflow-hidden shadow-lg bg-white">
+              <div class="relative" style="padding-top:56.25%">
+                <iframe v-if="video.video_type === 'youtube'"
+                  class="absolute inset-0 w-full h-full"
+                  :src="video.video_url.replace('watch?v=', 'embed/')"
+                  frameborder="0" allowfullscreen></iframe>
+                <iframe v-else-if="video.video_type === 'vimeo'"
+                  class="absolute inset-0 w-full h-full"
+                  :src="video.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')"
+                  frameborder="0" allowfullscreen></iframe>
+              </div>
+              <div class="p-4">
+                <h3 class="font-bold text-gray-900">{{ video.title }}</h3>
+                <p v-if="video.description" class="text-sm text-gray-600 mt-1">{{ video.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <WhyChooseUs v-if="sectionKey === 'why_choose_us'"
+        :features="whyChooseUsFeatures"
+        :title="whyChooseSectionData.title"
+        :subtitle="whyChooseSectionData.subtitle" />
+      <DepartmentsSection v-if="sectionKey === 'departments'" :departments="props.departments" />
+      <CentersOfExcellence v-if="sectionKey === 'centers_of_excellence'" :centers="centers" />
+      <ServicesSection v-if="sectionKey === 'healthcare_services'"
+        :services="servicesList"
+        :title="servicesSectionData.title"
+        :subtitle="servicesSectionData.subtitle" />
+      <DoctorsSection v-if="sectionKey === 'doctors'" :doctors="doctors" />
+      <LeadershipSection v-if="sectionKey === 'leadership'" :messages="leadershipMessages" />
+      <GallerySection v-if="sectionKey === 'gallery'" :items="props.galleries" />
+      <HealthPackages v-if="sectionKey === 'health_packages'" :packages="packages" />
+      <AppointmentSection v-if="sectionKey === 'appointment'" :available-weekdays="appointmentAvailableWeekdays" :blocked-dates="appointmentBlockedDates" />
+      <TestimonialsSection v-if="sectionKey === 'testimonials'" :reviews="props.reviews" />
+      <StatsCounter v-if="sectionKey === 'stats'" :stats="stats" />
+      <BlogSection v-if="sectionKey === 'blog'" :posts="props.blogs" />
+      <NewsletterPartners v-if="sectionKey === 'corporate_partners'"
+        :partners="partners"
+        :title="partnersSectionData.title"
+        :subtitle="partnersSectionData.subtitle" />
+      <ContactSection v-if="sectionKey === 'contact'"
+        :address="site_settings?.contact?.address"
+        :phone="site_settings?.contact?.phone_primary"
+        :email="site_settings?.contact?.email_primary" />
+    </template>
   </main>
 </template>
 

@@ -202,6 +202,61 @@ const logout = () => {
           </div>
         </div>
 
+        <!-- Section: Website Settings -->
+        <div>
+          <p v-show="!sidebarCollapsed" class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Website Settings</p>
+          <div class="space-y-1">
+            <Link :href="route('admin.site-settings.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.site-settings.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Site Settings' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Site Settings</span>
+            </Link>
+            <Link :href="route('admin.navigation.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.navigation.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Navigation Menus' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Navigation Menus</span>
+            </Link>
+            <Link :href="route('admin.quick-cards.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.quick-cards.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Quick Cards' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Quick Cards</span>
+            </Link>
+            <Link :href="route('admin.why-choose-us.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.why-choose-us.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Why Choose Us' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Why Choose Us</span>
+            </Link>
+            <Link :href="route('admin.home-videos.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.home-videos.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Home Videos' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Home Videos</span>
+            </Link>
+            <Link :href="route('admin.corporate-partners.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.corporate-partners.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Corporate Partners' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Corporate Partners</span>
+            </Link>
+            <Link :href="route('admin.home-sections.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.home-sections.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Section Order' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Section Order</span>
+            </Link>
+            <Link :href="route('admin.leadership-messages.index')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group relative"
+              :class="route().current('admin.leadership-messages.*') ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'hover:bg-slate-800/60 text-slate-400 hover:text-white'"
+              :title="sidebarCollapsed ? 'Leadership Messages' : ''">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <span v-show="!sidebarCollapsed" class="truncate">Leadership Messages</span>
+            </Link>
+          </div>
+        </div>
+
         <!-- Section: System & Tools -->
         <div>
           <p v-show="!sidebarCollapsed" class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System & Marketing</p>

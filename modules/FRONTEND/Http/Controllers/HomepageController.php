@@ -12,6 +12,8 @@ use Modules\WEBSITE_EXTRA\Interfaces\PatientReviewRepositoryInterface;
 use Modules\WEBSITE\Interfaces\COERepositoryInterface;
 use Modules\WEBSITE\Interfaces\DepartmentRepositoryInterface;
 use Modules\WEBSITE\Interfaces\DoctorRepositoryInterface;
+use Modules\SITE_SETTINGS\Services\FrontendSiteSettingsService;
+use Modules\WEBSITE_EXTRA\Models\LeadershipMessage;
 
 class HomepageController extends Controller
 {
@@ -22,7 +24,8 @@ class HomepageController extends Controller
         private readonly BlogService $blogService,
         private readonly HeroSliderRepositoryInterface $slideRepo,
         private readonly GalleryItemRepositoryInterface $galleryRepo,
-        private readonly PatientReviewRepositoryInterface $patientReviewRepo
+        private readonly PatientReviewRepositoryInterface $patientReviewRepo,
+        private readonly FrontendSiteSettingsService $siteSettingsService,
     ) {}
 
     public function index()
@@ -60,6 +63,23 @@ class HomepageController extends Controller
         });
         // dd($reviews);
 
+        $siteData = $this->siteSettingsService->homepageData();
+
+        $leadership = LeadershipMessage::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn ($m) => [
+                'name'        => $m->name,
+                'role'        => $m->role,
+                'roleLine'    => $m->role_line,
+                'eyebrow'     => $m->eyebrow,
+                'title'       => $m->title,
+                'quote'       => $m->quote,
+                'credentials' => $m->credentials ?? [],
+                'photo'       => $m->photo_url,
+                'message'     => $m->message,
+            ]);
+
         return Inertia::render('FRONTEND::Home', [
             'doctors' => $this->drRepo->allHomePageDoctor(),
             'departments' => $this->deptRepo->list_for_home_page(),
@@ -68,6 +88,14 @@ class HomepageController extends Controller
             'slides' => $slides,
             'galleries' => $this->galleryRepo->allforHome(),
             'reviews' => $reviews,
+            // Site Settings data
+            'site_settings'   => $siteData['site_settings'],
+            'quick_cards'     => $siteData['quick_cards'],
+            'why_choose_items' => $siteData['why_choose_items'],
+            'corporate_partners' => $siteData['corporate_partners'],
+            'home_videos'     => $siteData['home_videos'],
+            'navigation_menus' => $siteData['navigation_menus'],
+            'leadership'      => $leadership,
         ]);
     }
 }

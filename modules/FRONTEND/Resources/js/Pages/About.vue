@@ -1,7 +1,29 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+import FrontendLayout from '../Layout/FrontendLayout.vue'
+import SeoHead from '../Components/SeoHead.vue'
+
+const page = usePage()
+const props = defineProps<{
+  about_page?: { title?: string; content?: string; image_url?: string; video_url?: string; video_title?: string } | null
+}>()
+
+const aboutData = computed(() => props.about_page || {})
+const pageTitle = computed(() => aboutData.value.title || 'About AMZ Hospital Ltd.')
+const pageContent = computed(() => aboutData.value.content || '')
+const pageVideoUrl = computed(() => {
+  const url = aboutData.value.video_url
+  if (!url) return null
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return m ? `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&playsinline=1` : url
+})
+</script>
+
 <template>
     <FrontendLayout>
         <SeoHead
-            title="About AMZ Hospital"
+            :title="pageTitle"
             description="Learn about AMZ Hospital in Dhaka, our specialist healthcare team, patient-first values, modern medical technology, and commitment to safe 24/7 care."
             keywords="AMZ Hospital about, hospital in Dhaka, trusted healthcare Bangladesh, specialist hospital, 24/7 hospital Dhaka"
             canonical="/about"
@@ -32,14 +54,17 @@
                 <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
                     <div class="inline-flex items-center gap-2.5 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-blue-200 bg-white/10 backdrop-blur-md border border-white/20 rounded-full shadow-lg animate-fade-in-down">
                         <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-                        About AMZ Hospital Ltd.
+                        {{ pageTitle }}
                     </div>
 
                     <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-xl">
-                        Redefining Healthcare Excellence <span class="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">in Dhaka</span>
+                        {{ pageTitle }}
                     </h1>
 
-                    <p class="text-lg sm:text-2xl text-blue-100/90 font-light max-w-3xl mx-auto drop-shadow-md">
+                    <p v-if="aboutData.video_title" class="text-lg sm:text-2xl text-blue-100/90 font-light max-w-3xl mx-auto drop-shadow-md">
+                        {{ aboutData.video_title }}
+                    </p>
+                    <p v-else class="text-lg sm:text-2xl text-blue-100/90 font-light max-w-3xl mx-auto drop-shadow-md">
                         AMZ Hospital Ltd. measures its success by counting lives saved, hopes restored, and care delivered with unparalleled quality and professionalism.
                     </p>
 
@@ -64,6 +89,27 @@
             <div class="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-blue-100/30 blur-[150px] pointer-events-none -z-10"></div>
 
             <div class="max-w-7xl mx-auto space-y-24">
+
+                <!-- Dynamic About Content from Admin Panel -->
+                <div v-if="pageContent" class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-lg border border-blue-100 p-8 md:p-12">
+                        <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-blue-800" v-html="pageContent"></div>
+                    </div>
+                </div>
+
+                <!-- Dynamic About Video -->
+                <div v-if="pageVideoUrl" class="max-w-4xl mx-auto">
+                    <div class="relative w-full overflow-hidden rounded-2xl shadow-2xl bg-slate-900" style="padding-top: 56.25%;">
+                        <iframe class="absolute inset-0 w-full h-full" :src="pageVideoUrl"
+                            title="About AMZ Hospital" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen></iframe>
+                    </div>
+                    <p v-if="aboutData.video_title" class="text-center mt-4 text-lg font-semibold text-gray-700">{{ aboutData.video_title }}</p>
+                </div>
+
+                <!-- ═══ Show hardcoded sections ONLY when admin has NOT set dynamic content ═══ -->
+                <template v-if="!pageContent">
                 
                 <!-- Trust Stats Section -->
                 <div class="text-center max-w-4xl mx-auto space-y-8 animate-fade-in-down">
@@ -180,15 +226,15 @@
                     </div>
                 </div>
 
+                </template>
+                <!-- ═══ End of hardcoded sections ═══ -->
+
             </div>
         </div>
     </FrontendLayout>
 </template>
 
-<script setup>
-    import FrontendLayout from '../Layout/FrontendLayout.vue';
-    import SeoHead from '../Components/SeoHead.vue';
-</script>
+
 
 <style scoped>
 @keyframes fadeInDown {

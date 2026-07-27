@@ -1,5 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+
+const props = defineProps({
+    menus: { type: Array, default: () => [] },
+})
+
+const page = usePage()
+const logoUrl = computed(() => page.props.site_settings?.logo?.logo_url || null)
 
 const mobileMenuOpen = ref(false)
 const isFloating = ref(false)
@@ -86,13 +94,74 @@ onUnmounted(() => {
                 <!-- Logo -->
                 <a href="/" class="flex items-center space-x-3">
                     <div class="w-64 h-14 p-4 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <img src="https://amzhospitalbd.com/storage/sitesettings/March2024/DmL9Y5RIYaHugklMDs2I.png"
+                        <img v-if="logoUrl" :src="logoUrl" alt="Hospital Logo" />
+                        <img v-else src="https://amzhospitalbd.com/storage/sitesettings/March2024/DmL9Y5RIYaHugklMDs2I.png"
                         alt="AMZ Hospital Logo" />
                     </div>
                 </a>
 
                 <!-- Desktop Menu -->
                 <div class="hidden lg:flex items-center space-x-8">
+                    <!-- Dynamic Navigation Menus from Admin Panel -->
+                    <template v-if="menus && menus.length > 0">
+                        <template v-for="menu in menus" :key="menu.id">
+                            <!-- Mega Menu -->
+                            <div v-if="menu.menu_type === 'mega_menu' && menu.children?.length" class="desktop-menu-item relative">
+                                <button type="button"
+                                    class="text-gray-700 hover:text-blue-800 transition-colors font-medium inline-flex items-center gap-2">
+                                    {{ menu.label }}
+                                    <span v-if="menu.badge_text" :class="menu.badge_color || 'bg-red-500'" class="text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold">{{ menu.badge_text }}</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+                                <div class="desktop-submenu-right absolute top-full right-0 translate-y-3 opacity-0 invisible pointer-events-none transition-all duration-200 z-60 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6" :style="{ width: menu.config?.columns === 3 ? 'min(900px, calc(100vw - 2rem))' : 'min(640px, calc(100vw - 2rem))' }">
+                                    <div v-if="menu.config?.banner_url" class="mb-4 rounded-xl overflow-hidden h-40">
+                                        <img :src="menu.config.banner_url" :alt="menu.label" class="w-full h-full object-cover" />
+                                    </div>
+                                    <p v-if="menu.description" class="text-sm text-slate-500 mb-3">{{ menu.description }}</p>
+                                    <div class="grid gap-1" :class="menu.config?.columns === 3 ? 'grid-cols-3' : 'grid-cols-2'">
+                                        <a v-for="child in menu.children" :key="child.id"
+                                            :href="child.url || '#'" :target="child.target || '_self'"
+                                            class="block rounded-lg px-3 py-2 hover:bg-blue-50 transition-all">
+                                            <span class="block text-sm font-semibold text-slate-800">{{ child.label }}</span>
+                                            <span v-if="child.description" class="block text-xs text-slate-500 mt-0.5">{{ child.description }}</span>
+                                        </a>
+                                    </div>
+                                    <a v-if="menu.url" :href="menu.url" class="mt-4 inline-flex items-center bg-gradient-to-r from-blue-800 to-sky-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all">
+                                        View All {{ menu.label }} <i class="fas fa-arrow-right ml-2"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- Dropdown -->
+                            <div v-else-if="(menu.menu_type === 'dropdown' || menu.children?.length) && menu.children?.length" class="desktop-menu-item relative">
+                                <button type="button"
+                                    class="text-gray-700 hover:text-blue-800 transition-colors font-medium inline-flex items-center gap-2">
+                                    {{ menu.label }}
+                                    <span v-if="menu.badge_text" :class="menu.badge_color || 'bg-red-500'" class="text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold">{{ menu.badge_text }}</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+                                <div class="desktop-submenu-right absolute top-full right-0 translate-y-3 opacity-0 invisible pointer-events-none transition-all duration-200 z-60 w-64">
+                                    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 p-3">
+                                        <a v-for="child in menu.children" :key="child.id"
+                                            :href="child.url || '#'" :target="child.target || '_self'"
+                                            class="block text-slate-700 font-medium rounded-lg px-3 py-2 hover:text-blue-800 hover:bg-blue-50 transition-all">
+                                            {{ child.label }}
+                                            <span v-if="child.badge_text" :class="child.badge_color || 'bg-red-500'" class="ml-1 text-[8px] text-white px-1 py-0.5 rounded-full font-bold">{{ child.badge_text }}</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Simple Link -->
+                            <a v-else
+                                :href="menu.url || '#'" :target="menu.target || '_self'"
+                                class="text-gray-700 hover:text-blue-800 transition-colors font-medium inline-flex items-center gap-1.5">
+                                {{ menu.label }}
+                                <span v-if="menu.badge_text" :class="menu.badge_color || 'bg-red-500'" class="text-[9px] text-white px-1.5 py-0.5 rounded-full font-bold">{{ menu.badge_text }}</span>
+                            </a>
+                        </template>
+                    </template>
+
+                    <!-- Fallback: Default menus shown when no dynamic menus configured -->
+                    <template v-else>
                     <a href="/" class="text-gray-700 hover:text-blue-800 transition-colors font-medium">Home</a>
                     <a href="/about" class="text-gray-700 hover:text-blue-800 transition-colors font-medium">About</a>
 
@@ -281,6 +350,8 @@ View All Center Of Excellence <i class="fas fa-arrow-right ml-2"></i>
 </div>
 
 <a href="/contact" class="text-gray-700 hover:text-blue-800 transition-colors font-medium">Contact</a>
+</template>
+
 <a href="/appointment"
 class="bg-gradient-to-r from-blue-800 to-sky-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all transform hover:scale-105">
 <i class="fas fa-calendar-check mr-2"></i>Book Appointment

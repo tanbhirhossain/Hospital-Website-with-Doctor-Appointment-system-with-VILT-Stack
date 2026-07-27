@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   services: Array<{
     bg: string
     icon: string
@@ -7,6 +7,8 @@ defineProps<{
     desc: string
     items: string[]
   }>
+  title?: string | null
+  subtitle?: string | null
 }>()
 </script>
 
@@ -16,8 +18,8 @@ defineProps<{
 
     <div class="container mx-auto px-4">
       <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Comprehensive Healthcare Services</h2>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">From emergency response to diagnostics, surgery, maternity, pharmacy, and recovery support in one integrated system.</p>
+        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{{ title || 'Comprehensive Healthcare Services' }}</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">{{ subtitle || 'From emergency response to diagnostics, surgery, maternity, pharmacy, and recovery support in one integrated system.' }}</p>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-grid">
         <div v-for="svc in services" :key="svc.title" :class="`premium-sheen bg-gradient-to-br ${svc.bg} to-white border-2 border-gray-100 rounded-2xl p-8 hover:border-blue-800 hover:shadow-xl transition`">

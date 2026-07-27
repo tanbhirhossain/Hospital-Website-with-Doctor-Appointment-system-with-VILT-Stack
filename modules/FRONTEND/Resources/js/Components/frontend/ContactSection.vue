@@ -1,3 +1,11 @@
+<script setup lang="ts">
+const props = defineProps<{
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+}>()
+</script>
+
 <template>
   <section id="contact" role="region" aria-label="Contact information" class="py-20 bg-white scroll-reveal reveal-contact fade-in-0 slide-in-from-bottom-8 duration-700">
       <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
@@ -13,7 +21,7 @@
             <i class="fas fa-map-marker-alt text-white text-2xl"></i>
           </div>
           <h3 class="text-xl font-bold text-gray-900 mb-3">Visit Us</h3>
-          <p class="text-gray-600">Cha- 80/3, Shadhinota Sarani, Progati Sarani Rd<br> Uttar Badda, Dhaka-1212</p>
+          <p class="text-gray-600" v-html="(address || 'Cha- 80/3, Shadhinota Sarani, Progati Sarani Rd<br> Uttar Badda, Dhaka-1212')"></p>
         </div>
         <div class="premium-sheen bg-gradient-to-br from-green-50 to-white rounded-2xl p-8 shadow-lg text-center hover:shadow-xl transition">
           <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -21,8 +29,8 @@
           </div>
           <h3 class="text-xl font-bold text-gray-900 mb-3">Call Us</h3>
           <p class="text-gray-600">
-            Emergency: <a href="tel:10699" class="text-blue-800 font-bold hover:underline">10699</a><br>
-            General: <a href="tel:+8801234567890" class="text-blue-800 hover:underline">+880 184 733 1047</a>
+            Emergency: <a :href="`tel:${phone || '10699'}`" class="text-blue-800 font-bold hover:underline">{{ phone || '10699' }}</a><br>
+            General: <a href="tel:+8801847331047" class="text-blue-800 hover:underline">+880 184 733 1047</a>
           </p>
         </div>
         <div class="premium-sheen bg-gradient-to-br from-purple-50 to-white rounded-2xl p-8 shadow-lg text-center hover:shadow-xl transition">
@@ -31,7 +39,7 @@
           </div>
           <h3 class="text-xl font-bold text-gray-900 mb-3">Email Us</h3>
           <p class="text-gray-600">
-            <a href="mailto:info@amzhospital.com" class="text-blue-800 hover:underline">info@amzhospital.com</a><br>
+            <a :href="`mailto:${email || 'info@amzhospital.com'}`" class="text-blue-800 hover:underline">{{ email || 'info@amzhospital.com' }}</a><br>
             <a href="mailto:emergency@amzhospital.com" class="text-blue-800 hover:underline">emergency@amzhospital.com</a>
           </p>
         </div>

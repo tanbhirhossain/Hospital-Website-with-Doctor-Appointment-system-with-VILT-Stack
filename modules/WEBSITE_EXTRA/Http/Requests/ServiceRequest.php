@@ -40,7 +40,7 @@ class ServiceRequest extends FormRequest
         $nullableFields = [
             'icon', 'short_description', 'description', 'price',
             'duration_minutes', 'slug', 'meta_title', 'meta_description',
-            'sort_order',
+            'sort_order', 'category',
         ];
         foreach ($nullableFields as $field) {
             if ($this->has($field) && $this->input($field) === '') {
@@ -57,6 +57,7 @@ class ServiceRequest extends FormRequest
         return [
             'title'              => 'required|string|max:255',
             'slug'               => ['nullable', 'string', 'max:255', Rule::unique('services', 'slug')->ignore($serviceId)],
+            'category'           => 'nullable|string|max:100',
             'icon'               => 'nullable|string|max:100',
             'short_description'  => 'nullable|string|max:500',
             'description'        => 'nullable|string',

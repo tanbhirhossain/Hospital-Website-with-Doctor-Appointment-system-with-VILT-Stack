@@ -1,11 +1,13 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   features: Array<{
     color: string
     icon: string
     title: string
     desc: string
   }>
+  title?: string | null
+  subtitle?: string | null
 }>()
 </script>
 
@@ -16,10 +18,10 @@ defineProps<{
     <div class="container mx-auto px-4">
       <div class="text-center mb-16">
         <div class="inline-block bg-white text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-sm">
-          <i class="fas fa-award mr-2"></i>Why Choose Us
+          <i class="fas fa-award mr-2"></i>{{ title || 'Why Choose Us' }}
         </div>
-        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why AMZ Hospital is Your Best Choice</h2>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Patients choose AMZ for reliability, transparency, faster access, and a safer care experience from admission to follow-up.</p>
+        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{{ title || 'Why AMZ Hospital is Your Best Choice' }}</h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">{{ subtitle || 'Patients choose AMZ for reliability, transparency, faster access, and a safer care experience from admission to follow-up.' }}</p>
       </div>
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 stagger-grid">
         <div

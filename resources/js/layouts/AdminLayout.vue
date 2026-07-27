@@ -7,7 +7,10 @@ import {
     Bell, Search, LogOut, Settings, ChevronDown,
     Building2, Activity, Sparkles, CheckCircle2,
     AlertCircle, Info, RefreshCw, Moon, Sun,
-    Shield, Zap, TrendingUp, Clock
+    Shield, Zap, TrendingUp, Clock,
+    Globe, Phone, Image, MessageSquare, MapPin,
+    Layout as LayoutIcon, Video, Award, HeartPulse,
+    Handshake, Navigation, LayoutGrid, ArrowUpDown
 } from 'lucide-vue-next'
 
 // --- Page state ---------------------------------------------------------------
@@ -88,7 +91,7 @@ const navGroups = [
     {
         label: 'Core',
         items: [
-            { label: 'Dashboard',           icon: LayoutDashboard, route: 'admin.dashboard',         color: 'text-violet-400',  accent: 'from-violet-500 to-indigo-600' },
+            // { label: 'Dashboard',           icon: LayoutDashboard, route: 'admin.dashboard',         color: 'text-violet-400',  accent: 'from-violet-500 to-indigo-600' },
             { label: 'Departments',          icon: Building2,       route: 'admin.departments.index',  color: 'text-sky-400',     accent: 'from-sky-500 to-blue-600' },
             { label: 'Doctors',              icon: Stethoscope,     route: 'admin.doctors.index',      color: 'text-emerald-400', accent: 'from-emerald-500 to-teal-600' },
         ]
@@ -97,14 +100,26 @@ const navGroups = [
         label: 'Clinical',
         items: [
             { label: 'Centers of Excellence', icon: Star,          route: 'admin.coe.index',           color: 'text-amber-400',   accent: 'from-amber-500 to-orange-600' },
-            { label: 'Doctor Rests',           icon: BedDouble,    route: 'admin.doctor-rests.index',  color: 'text-rose-400',    accent: 'from-rose-500 to-pink-600' },
+            // { label: 'Doctor Rests',           icon: BedDouble,    route: 'admin.doctor-rests.index',  color: 'text-rose-400',    accent: 'from-rose-500 to-pink-600' },
             { label: 'Appointments',           icon: CalendarCheck, route: 'appointments.index',        color: 'text-indigo-400',  accent: 'from-indigo-500 to-blue-600' },
         ]
     },
     {
         label: 'Analytics',
         items: [
-            { label: 'Reports',              icon: BarChart3,       route: 'admin.reports.index',      color: 'text-teal-400',    accent: 'from-teal-500 to-cyan-600' },
+            // { label: 'Reports',              icon: BarChart3,       route: 'admin.reports.index',      color: 'text-teal-400',    accent: 'from-teal-500 to-cyan-600' },
+        ]
+    },
+    {
+        label: 'Website',
+        items: [
+            { label: 'Site Settings',        icon: Globe,           route: 'admin.site-settings.index',   color: 'text-cyan-400',    accent: 'from-cyan-500 to-blue-600' },
+            { label: 'Navigation Menus',     icon: Navigation,      route: 'admin.navigation.index',      color: 'text-fuchsia-400', accent: 'from-fuchsia-500 to-purple-600' },
+            { label: 'Quick Cards',          icon: LayoutGrid,      route: 'admin.quick-cards.index',     color: 'text-lime-400',    accent: 'from-lime-500 to-green-600' },
+            { label: 'Why Choose Us',        icon: Award,           route: 'admin.why-choose-us.index',   color: 'text-orange-400',  accent: 'from-orange-500 to-amber-600' },
+            { label: 'Home Videos',          icon: Video,           route: 'admin.home-videos.index',     color: 'text-pink-400',    accent: 'from-pink-500 to-rose-600' },
+            { label: 'Corporate Partners',   icon: Handshake,       route: 'admin.corporate-partners.index', color: 'text-yellow-400', accent: 'from-yellow-500 to-orange-600' },
+            { label: 'Section Order',        icon: ArrowUpDown,     route: 'admin.home-sections.index',   color: 'text-emerald-400', accent: 'from-emerald-500 to-teal-600' },
         ]
     },
 ]

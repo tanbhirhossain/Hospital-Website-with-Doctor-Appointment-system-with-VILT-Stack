@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 import AppNavbar from '../Components/frontend/AppNavbar.vue'
 import AppFooter from '../Components/frontend/AppFooter.vue'
 import ScrollProgress from '../Components/frontend/ScrollProgress.vue'
@@ -8,6 +8,14 @@ import BackToTop from '../Components/frontend/BackToTop.vue'
 import ChatHub from '../Components/frontend/ChatHub.vue'
 
 defineOptions({ name: 'FrontendLayout' })
+
+// Site settings come from shared Inertia props (HandleInertiaRequests middleware)
+const page = usePage()
+const siteSettings = computed(() => page.props.site_settings || {})
+const topbar = computed(() => siteSettings.value?.topbar || {})
+const footer = computed(() => siteSettings.value?.footer || {})
+const footerLogo = computed(() => siteSettings.value?.logo?.footer_logo_url || null)
+const navigationMenus = computed(() => siteSettings.value?.navigation_menus || [])
 </script>
 
 <template>
@@ -28,33 +36,42 @@ defineOptions({ name: 'FrontendLayout' })
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center text-sm">
                     <div class="flex items-center space-x-6">
-                        <a href="tel:10699" class="flex items-center hover:text-sky-400 transition-colors">
+                        <a v-if="topbar.emergency" :href="`tel:${topbar.emergency}`" class="flex items-center hover:text-sky-400 transition-colors">
+                            <i class="fas fa-phone-alt mr-2"></i>
+                            <span class="font-semibold">Emergency Hotline: {{ topbar.emergency }}</span>
+                        </a>
+                        <a v-else href="tel:10699" class="flex items-center hover:text-sky-400 transition-colors">
                             <i class="fas fa-phone-alt mr-2"></i>
                             <span class="font-semibold">Emergency Hotline: 10699</span>
                         </a>
-                        <a href="mailto:info@amzhospital.com" class="flex items-center hover:text-sky-400 transition-colors">
+                        <a :href="`mailto:${topbar.email || 'info@amzhospitalbd.com'}`" class="flex items-center hover:text-sky-400 transition-colors">
                             <i class="fas fa-envelope mr-2"></i>
-                            info@amzhospitalbd.com
+                            {{ topbar.email || 'info@amzhospitalbd.com' }}
                         </a>
                         <div class="flex items-center">
                             <i class="fas fa-clock mr-2"></i>
-                            <span>Open 24/7 - Always Here For You </span>
+                            <span>{{ topbar.notice || 'Open 24/7 - Always Here For You' }}</span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm">Follow Us:</span>
-                        <a href="https://facebook.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
-                        <a href="https://twitter.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-twitter"></i></a>
-                        <a href="https://instagram.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-instagram"></i></a>
-                        <a href="https://linkedin.com/company/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="https://www.youtube.com/@amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-youtube"></i></a>
+                        <a v-if="footer.facebook" :href="footer.facebook" target="_blank" class="hover:text-sky-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                        <a v-else href="https://facebook.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                        <a v-if="footer.twitter" :href="footer.twitter" target="_blank" class="hover:text-sky-400 transition-colors"><i class="fab fa-twitter"></i></a>
+                        <a v-else href="https://twitter.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-twitter"></i></a>
+                        <a v-if="footer.instagram" :href="footer.instagram" target="_blank" class="hover:text-sky-400 transition-colors"><i class="fab fa-instagram"></i></a>
+                        <a v-else href="https://instagram.com/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-instagram"></i></a>
+                        <a v-if="footer.linkedin" :href="footer.linkedin" target="_blank" class="hover:text-sky-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                        <a v-else href="https://linkedin.com/company/amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                        <a v-if="footer.youtube" :href="footer.youtube" target="_blank" class="hover:text-sky-400 transition-colors"><i class="fab fa-youtube"></i></a>
+                        <a v-else href="https://www.youtube.com/@amzhospitalltd" class="hover:text-sky-400 transition-colors"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Main Navigation -->
-        <AppNavbar />
+        <AppNavbar :menus="navigationMenus" />
 
         <!-- Main Content -->
         <main id="main-content" role="main">
@@ -62,7 +79,7 @@ defineOptions({ name: 'FrontendLayout' })
         </main>
 
         <!-- Footer -->
-        <AppFooter />
+        <AppFooter :footer-data="footer" :footer-logo="footerLogo" :menus="navigationMenus" />
 
         <!-- Back to Top -->
         <BackToTop />

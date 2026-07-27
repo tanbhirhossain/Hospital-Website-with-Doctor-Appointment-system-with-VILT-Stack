@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
-defineProps<{
+const props = defineProps<{
   partners: Array<{ name: string; logo: string }>
+  title?: string | null
+  subtitle?: string | null
 }>()
 
 const email = ref('')
@@ -121,7 +123,8 @@ const submit = async () => {
       <!-- Corporate Partners Section -->
       <div>
         <div class="text-center mb-8">
-          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Trusted By Leading Organizations</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ title || 'Trusted By Leading Organizations' }}</p>
+          <p v-if="subtitle" class="text-lg text-gray-600 mt-2">{{ subtitle }}</p>
         </div>
         
         <!-- Seamless Marquee Track -->

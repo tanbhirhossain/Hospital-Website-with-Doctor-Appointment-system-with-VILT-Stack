@@ -35,6 +35,7 @@ const galleryItems = ref<GalleryItem[]>([]);
 const form = useForm({
     title: '',
     slug: '',
+    category: '',
     icon: '',
     short_description: '',
     description: '',
@@ -145,6 +146,10 @@ const submit = () => {
                                 <div>
                                     <Label>Slug</Label>
                                     <Input v-model="form.slug" @input="slugEdited = true" placeholder="auto-generated" class="mt-1" />
+                                </div>
+                                <div>
+                                    <Label>Category</Label>
+                                    <Input v-model="form.category" placeholder="e.g. Diagnostic, Surgical, Emergency..." class="mt-1" />
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-4">

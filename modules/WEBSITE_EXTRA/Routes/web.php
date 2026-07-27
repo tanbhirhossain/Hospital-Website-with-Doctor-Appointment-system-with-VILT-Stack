@@ -4,6 +4,7 @@ use Modules\WEBSITE_EXTRA\Http\Controllers\ClientReviewController;
 use Modules\WEBSITE_EXTRA\Http\Controllers\ContactMessageController;
 use Modules\WEBSITE_EXTRA\Http\Controllers\HealthPackageController;
 use Modules\WEBSITE_EXTRA\Http\Controllers\HeroSliderController;
+use Modules\WEBSITE_EXTRA\Http\Controllers\LeadershipMessageController;
 use Modules\WEBSITE_EXTRA\Http\Controllers\PatientReviewController;
 use Modules\WEBSITE_EXTRA\Http\Controllers\ServiceController;
 
@@ -20,4 +21,10 @@ Route::middleware(['web','auth'])->name('admin.')->prefix('admin')->group(functi
     Route::post('contact-messages/{id}/resolve', [ContactMessageController::class, 'markResolved'])->name('contact-messages.resolve');
     Route::post('contact-messages/{id}/archive', [ContactMessageController::class, 'archive'])->name('contact-messages.archive');
     Route::delete('contact-messages/{id}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+
+    // Leadership Messages
+    Route::get('leadership-messages', [LeadershipMessageController::class, 'index'])->name('leadership-messages.index');
+    Route::post('leadership-messages', [LeadershipMessageController::class, 'store'])->name('leadership-messages.store');
+    Route::post('leadership-messages/{leadershipMessage}', [LeadershipMessageController::class, 'update'])->name('leadership-messages.update');
+    Route::delete('leadership-messages/{leadershipMessage}', [LeadershipMessageController::class, 'destroy'])->name('leadership-messages.destroy');
 });

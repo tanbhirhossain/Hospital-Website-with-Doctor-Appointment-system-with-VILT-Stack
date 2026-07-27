@@ -1,3 +1,27 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+
+const props = defineProps<{
+  title?: string | null
+  content?: string | null
+  videoUrl?: string | null
+  imageUrl?: string | null
+}>()
+
+const defaultVideoUrl = 'https://www.youtube.com/embed/CBQMG4-YHrs?si=jbzFDpgKXlvQUQdR&start=101&autoplay=1&mute=1&playsinline=1&vq=hd1080'
+
+// Convert YouTube watch URLs to embed URLs automatically
+const embedVideoUrl = computed(() => {
+  const url = props.videoUrl
+  if (!url) return defaultVideoUrl
+  // Convert youtube.com/watch?v=ID to youtube.com/embed/ID
+  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1&mute=1&playsinline=1`
+  // If already an embed URL or non-YouTube, return as-is
+  return url
+})
+</script>
+
 <template>
   <section id="about" role="region" aria-label="About us" class="py-20 bg-white scroll-reveal reveal-about fade-in-0 slide-in-from-left-12 duration-700">
     <div class="container mx-auto px-4">
@@ -6,7 +30,7 @@
           <div class="relative w-full overflow-hidden rounded-2xl shadow-2xl bg-slate-900" style="padding-top: 56.25%;">
             <iframe
               class="absolute inset-0 h-full w-full"
-              src="https://www.youtube.com/embed/CBQMG4-YHrs?si=jbzFDpgKXlvQUQdR&start=101&autoplay=1&mute=1&playsinline=1&vq=hd1080"
+              :src="embedVideoUrl"
               title="YouTube video player"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -21,15 +45,18 @@
         </div>
         <div>
           <div class="inline-block bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <i class="fas fa-hospital mr-2"></i>About AMZ Hospital
+            <i class="fas fa-hospital mr-2"></i>{{ title ? 'About Us' : 'About AMZ Hospital' }}
           </div>
-          <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Welcome to AMZ Hospital Ltd</h2>
+          <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">{{ title || 'Welcome to AMZ Hospital Ltd' }}</h2>
+          <div v-if="content" v-html="content" class="text-lg text-gray-600 mb-6 leading-relaxed"></div>
+          <template v-else>
           <p class="text-lg text-gray-600 mb-6 leading-relaxed">
             AMZ Hospital Ltd. measured its success by counting of lives been saved, hopes been restored, and care been delivered with quality service & professionalism.
           </p>
           <p class="text-gray-600 mb-8 leading-relaxed">
             It was founded by a team of visionary clinicians, leaders from civil society and different discipline with a shared vision of reducing health care inequalities.
           </p>
+          </template>
           <div class="grid sm:grid-cols-2 gap-4 mb-8">
             <div v-for="feat in ['24/7 Emergency Care', 'Expert Specialists', 'Modern Equipment', 'Patient-Centered Care']" :key="feat" class="flex items-start space-x-3">
               <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
