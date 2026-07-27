@@ -351,6 +351,7 @@ useScrollReveal()
         :address="site_settings?.contact?.address"
         :phone="site_settings?.contact?.phone_primary"
         :email="site_settings?.contact?.email_primary" />
+        <!-- this is edited -->
     </template>
   </main>
 </template>
